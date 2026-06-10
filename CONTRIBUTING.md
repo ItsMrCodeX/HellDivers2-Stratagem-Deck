@@ -37,7 +37,6 @@ dotnet restore HD2Companion.slnx
 
 ## Commit Messages
 
-- Use present tense, imperative mood: "Add stratagem search" not "Added" or "Adds".
 - Keep the first line under 72 characters.
 - Reference issues: `Fixes #42` or `Relates to #42`.
 
