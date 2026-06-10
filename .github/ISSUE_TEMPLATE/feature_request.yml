@@ -1,0 +1,33 @@
+name: Feature Request
+description: Propose a new feature or improvement
+labels: [enhancement]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for suggesting an improvement. Describe your idea clearly so it can be understood and discussed.
+  - type: textarea
+    id: problem
+    attributes:
+      label: Is your request related to a problem?
+      description: Describe what problem this feature would solve.
+      placeholder: I'm always frustrated when...
+    validations:
+      required: true
+  - type: textarea
+    id: solution
+    attributes:
+      label: Proposed solution
+      description: Describe what you would like to see implemented.
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: Any alternative solutions or workarounds you've thought about.
+  - type: textarea
+    id: additional
+    attributes:
+      label: Additional context
+      description: Any other details, mockups, or references.
