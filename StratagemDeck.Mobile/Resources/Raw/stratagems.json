@@ -97,7 +97,9 @@
     "M-102 Fast Recon Vehicle": "left down right down right down up",
     "TD-220 Bastion MK XVI": "left down right down left down up down up",
     "EXO-55 Breakthrough Exosuit": "left down right left right down up",
-    "EXO-51 Lumberer Exosuit": "left down right up right left up"
+    "EXO-51 Lumberer Exosuit": "left down right up right left up",
+    "M-103 Supply FRV": "left down left left down up right",
+    "M-104 Incinerator FRV": "left down right left down up up"
   },
   "Mission": {
     "Reinforce": "up down right left up",
