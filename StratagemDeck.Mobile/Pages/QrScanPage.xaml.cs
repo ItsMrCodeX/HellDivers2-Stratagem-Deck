@@ -1,8 +1,8 @@
-using HD2Companion.Mobile.ViewModels;
+using StratagemDeck.Mobile.ViewModels;
 using ZXing.Net.Maui;
 using ZXing.Net.Maui.Controls;
 
-namespace HD2Companion.Mobile.Pages;
+namespace StratagemDeck.Mobile.Pages;
 
 public partial class QrScanPage : ContentPage
 {

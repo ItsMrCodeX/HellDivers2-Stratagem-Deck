@@ -2,10 +2,10 @@ using System.Net;
 using System.Net.Sockets;
 using System.Text;
 using System.Text.Json;
-using HD2Companion.Server.Models;
-using HD2Companion.Server.Native;
+using StratagemDeck.Server.Models;
+using StratagemDeck.Server.Native;
 
-namespace HD2Companion.Server.Services;
+namespace StratagemDeck.Server.Services;
 
 public class CommandListener : IDisposable
 {

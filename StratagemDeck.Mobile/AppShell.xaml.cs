@@ -1,4 +1,4 @@
-﻿namespace HD2Companion.Mobile;
+﻿namespace StratagemDeck.Mobile;
 
 public partial class AppShell : Shell
 {

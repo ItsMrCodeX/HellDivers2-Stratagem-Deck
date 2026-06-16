@@ -1,7 +1,7 @@
 ﻿using Android.App;
 using Android.Runtime;
 
-namespace HD2Companion.Mobile;
+namespace StratagemDeck.Mobile;
 
 [Application]
 public class MainApplication : MauiApplication

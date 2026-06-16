@@ -1,6 +1,6 @@
 using System.Globalization;
 
-namespace HD2Companion.Mobile.Converters;
+namespace StratagemDeck.Mobile.Converters;
 
 public class BoolToColorConverter : IValueConverter
 {

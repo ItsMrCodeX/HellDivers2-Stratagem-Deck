@@ -1,7 +1,7 @@
 using System.Collections.ObjectModel;
 using System.Text.Json.Serialization;
 
-namespace HD2Companion.Mobile.Models;
+namespace StratagemDeck.Mobile.Models;
 
 public class Stratagem
 {

@@ -2,9 +2,9 @@ using System.Net;
 using System.Net.Sockets;
 using System.Text;
 using System.Text.Json;
-using HD2Companion.Server.Models;
+using StratagemDeck.Server.Models;
 
-namespace HD2Companion.Server.Services;
+namespace StratagemDeck.Server.Services;
 
 public class DiscoveryBroadcaster : IDisposable
 {

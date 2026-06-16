@@ -1,4 +1,4 @@
 <Solution>
-  <Project Path="HD2Companion.Mobile/HD2Companion.Mobile.csproj" />
-  <Project Path="HD2Companion.Server/HD2Companion.Server.csproj" />
+  <Project Path="StratagemDeck.Mobile/StratagemDeck.Mobile.csproj" />
+  <Project Path="StratagemDeck.Server/StratagemDeck.Server.csproj" />
 </Solution>

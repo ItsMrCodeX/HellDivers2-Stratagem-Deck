@@ -1,11 +1,11 @@
-# HD2 Companion
+# HD2 Stratagem Deck
 
-A tactical companion app for Helldivers 2 that lets you launch stratagems from your mobile device to your PC. Built with a mobile interface (MAUI) and a lightweight desktop server that emulates keyboard input.
+A companion app for Helldivers 2 that lets you launch stratagems from your mobile device to your PC. Built with a mobile interface (MAUI) and a lightweight desktop server that emulates keyboard input.
 
 ## What it does
 
-- **Desktop Server (`HD2Companion.Server`)**: Listens for UDP commands on port `12345`, simulates keyboard input (`Ctrl + arrow sequences`) using Windows `SendInput` API
-- **Mobile App (`HD2Companion.Mobile`)**: 3-tab UI (Game / Setup / Settings) for building loadouts and sending stratagems with a single tap
+- **Desktop Server (`StratagemDeck.Server`)**: Listens for UDP commands on port `12345`, simulates keyboard input (`Ctrl + arrow sequences`) using Windows `SendInput` API
+- **Mobile App (`StratagemDeck.Mobile`)**: 3-tab UI (Game / Setup / Settings) for building loadouts and sending stratagems with a single tap
 - **QR Code pairing**: Server displays a QR code with IP + PIN — scan it with the mobile app for instant connection
 - **Active Network Scan**: Mobile scans the local subnet to discover the server automatically
 
@@ -34,20 +34,20 @@ A tactical companion app for Helldivers 2 that lets you launch stratagems from y
 ### 1. Clone
 
 ```bash
-git clone https://github.com/ItsMrCodeX/HellDivers2-Companion
-cd HD2-Companion
+git clone https://github.com/ItsMrCodeX/HellDivers2-Stratagem-Deck
+cd HellDivers2-Stratagem-Deck
 ```
 
 ### 2. Restore dependencies
 
 ```bash
-dotnet restore HD2Companion.slnx
+dotnet restore StratagemDeck.slnx
 ```
 
 ### 3. Run the Server on your PC
 
 ```bash
-dotnet run --project HD2Companion.Server
+dotnet run --project StratagemDeck.Server
 ```
 
 The console will display:
@@ -61,14 +61,14 @@ Keep this window open while playing.
 
 **Android:**
 ```bash
-dotnet build HD2Companion.Mobile -f net10.0-android -c Release
-# APK: HD2Companion.Mobile/bin/Release/net10.0-android/
+dotnet build StratagemDeck.Mobile -f net10.0-android -c Release
+# APK: StratagemDeck.Mobile/bin/Release/net10.0-android/
 ```
 
 **Windows (for testing):**
 ```bash
-dotnet build HD2Companion.Mobile -f net10.0-windows10.0.19041.0
-dotnet run --project HD2Companion.Mobile -f net10.0-windows10.0.19041.0
+dotnet build StratagemDeck.Mobile -f net10.0-windows10.0.19041.0
+dotnet run --project StratagemDeck.Mobile -f net10.0-windows10.0.19041.0
 ```
 
 ### 5. Connect
@@ -90,15 +90,15 @@ dotnet run --project HD2Companion.Mobile -f net10.0-windows10.0.19041.0
 ## Project structure
 
 ```
-HD2-Companion/
-├── HD2Companion.slnx
-├── HD2Companion.Server/          # .NET 9 Console (Windows)
+HellDivers2-Stratagem-Deck/
+├── StratagemDeck.slnx
+├── StratagemDeck.Server/          # .NET 9 Console (Windows)
 │   ├── Program.cs                # Entry point, QR display
 │   ├── Native/KeyInjector.cs     # SendInput P/Invoke
 │   └── Services/
 │       ├── CommandListener.cs    # UDP listener
 │       └── PinManager.cs         # 4-digit PIN
-├── HD2Companion.Mobile/          # .NET 10 MAUI
+├── StratagemDeck.Mobile/          # .NET 10 MAUI
 │   ├── Pages/
 │   │   ├── GamePage.xaml         # In-game quick send
 │   │   ├── SetupPage.xaml        # Loadout builder

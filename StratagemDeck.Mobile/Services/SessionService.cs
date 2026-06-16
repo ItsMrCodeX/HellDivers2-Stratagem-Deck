@@ -1,7 +1,7 @@
 using System.Collections.ObjectModel;
-using HD2Companion.Mobile.Models;
+using StratagemDeck.Mobile.Models;
 
-namespace HD2Companion.Mobile.Services;
+namespace StratagemDeck.Mobile.Services;
 
 public class SessionService
 {

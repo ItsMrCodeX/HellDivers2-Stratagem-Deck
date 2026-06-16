@@ -1,14 +1,14 @@
-﻿using HD2Companion.Server.Services;
+﻿using StratagemDeck.Server.Services;
 using QRCoder;
 
 var cmdPort = 12345;
 var pinManager = new PinManager();
 
-Console.Title = "HD2 Companion Server";
+Console.Title = "Stratagem Deck Server";
 Console.ForegroundColor = ConsoleColor.Cyan;
-Console.WriteLine("╔══════════════════════════════╗");
-Console.WriteLine("║   HD2 Companion Server v1.0  ║");
-Console.WriteLine("╚══════════════════════════════╝");
+Console.WriteLine("╔════════════════════════════════╗");
+Console.WriteLine("║   Stratagem Deck Server v1.0   ║");
+Console.WriteLine("╚════════════════════════════════╝");
 Console.ResetColor();
 Console.WriteLine();
 

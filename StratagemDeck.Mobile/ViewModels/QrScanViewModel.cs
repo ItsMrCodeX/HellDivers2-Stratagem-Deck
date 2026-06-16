@@ -1,8 +1,8 @@
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
-using HD2Companion.Mobile.Services;
+using StratagemDeck.Mobile.Services;
 
-namespace HD2Companion.Mobile.ViewModels;
+namespace StratagemDeck.Mobile.ViewModels;
 
 public class QrScanViewModel : INotifyPropertyChanged
 {

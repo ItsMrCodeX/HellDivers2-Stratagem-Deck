@@ -30,7 +30,7 @@ jobs:
         run: dotnet workload install maui
 
       - name: Restore
-        run: dotnet restore HD2Companion.slnx
+        run: dotnet restore StratagemDeck.slnx
 
       - name: Get version from tag
         id: version
@@ -50,13 +50,13 @@ jobs:
           $xml.Save((Resolve-Path $propsPath))
 
       - name: Publish Server (win-x64)
-        run: dotnet publish HD2Companion.Server -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -o artifacts/server
+        run: dotnet publish StratagemDeck.Server -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -o artifacts/server
 
       - name: Build Android APK
-        run: dotnet publish HD2Companion.Mobile -c Release -f net10.0-android -o artifacts/android
+        run: dotnet publish StratagemDeck.Mobile -c Release -f net10.0-android -o artifacts/android
 
       - name: Zip Server
-        run: Compress-Archive -Path artifacts/server/* -DestinationPath artifacts/HD2Companion-Server-${{ steps.version.outputs.version }}-win-x64.zip
+        run: Compress-Archive -Path artifacts/server/* -DestinationPath artifacts/StratagemDeck-Server-${{ steps.version.outputs.version }}-win-x64.zip
 
       - name: Find APK
         id: apk
@@ -82,7 +82,7 @@ jobs:
           name: v${{ steps.version.outputs.version }}
           body: ${{ steps.changelog.outputs.notes }}
           files: |
-            artifacts/HD2Companion-Server-${{ steps.version.outputs.version }}-win-x64.zip
+            artifacts/StratagemDeck-Server-${{ steps.version.outputs.version }}-win-x64.zip
             ${{ steps.apk.outputs.path }}
           draft: false
           prerelease: ${{ contains(github.ref_name, '-rc') || contains(github.ref_name, '-preview') }}

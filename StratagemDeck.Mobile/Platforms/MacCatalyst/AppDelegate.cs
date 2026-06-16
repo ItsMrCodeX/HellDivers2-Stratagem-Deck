@@ -1,6 +1,6 @@
 ﻿using Foundation;
 
-namespace HD2Companion.Mobile;
+namespace StratagemDeck.Mobile;
 
 [Register("AppDelegate")]
 public class AppDelegate : MauiUIApplicationDelegate

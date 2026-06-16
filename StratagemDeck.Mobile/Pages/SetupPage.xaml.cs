@@ -1,6 +1,6 @@
-using HD2Companion.Mobile.ViewModels;
+using StratagemDeck.Mobile.ViewModels;
 
-namespace HD2Companion.Mobile.Pages;
+namespace StratagemDeck.Mobile.Pages;
 
 public partial class SetupPage : ContentPage
 {

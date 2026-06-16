@@ -1,6 +1,6 @@
 using System.Text.Json.Serialization;
 
-namespace HD2Companion.Server.Models;
+namespace StratagemDeck.Server.Models;
 
 public class StratagemCommand
 {

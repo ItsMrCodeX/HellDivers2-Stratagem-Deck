@@ -1,9 +1,9 @@
 using System.Text.Json;
-using HD2Companion.Mobile.Models;
+using StratagemDeck.Mobile.Models;
 using SkiaSharp;
 using Svg.Skia;
 
-namespace HD2Companion.Mobile.Services;
+namespace StratagemDeck.Mobile.Services;
 
 public class StratagemDataService
 {

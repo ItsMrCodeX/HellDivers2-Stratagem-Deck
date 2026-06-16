@@ -1,6 +1,6 @@
 using System.Runtime.InteropServices;
 
-namespace HD2Companion.Server.Native;
+namespace StratagemDeck.Server.Native;
 
 public static class KeyInjector
 {

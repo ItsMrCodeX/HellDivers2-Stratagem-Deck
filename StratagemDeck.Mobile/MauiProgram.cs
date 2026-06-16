@@ -1,9 +1,9 @@
-﻿using HD2Companion.Mobile.Pages;
-using HD2Companion.Mobile.Services;
-using HD2Companion.Mobile.ViewModels;
+﻿using StratagemDeck.Mobile.Pages;
+using StratagemDeck.Mobile.Services;
+using StratagemDeck.Mobile.ViewModels;
 using ZXing.Net.Maui.Controls;
 
-namespace HD2Companion.Mobile;
+namespace StratagemDeck.Mobile;
 
 public static class MauiProgram
 {

@@ -2,10 +2,10 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Windows.Input;
-using HD2Companion.Mobile.Models;
-using HD2Companion.Mobile.Services;
+using StratagemDeck.Mobile.Models;
+using StratagemDeck.Mobile.Services;
 
-namespace HD2Companion.Mobile.ViewModels;
+namespace StratagemDeck.Mobile.ViewModels;
 
 public class SetupViewModel : INotifyPropertyChanged
 {

@@ -1,4 +1,4 @@
-# Contributing to HD2 Companion
+# Contributing to HD2 Stratagem Deck
 
 Thanks for your interest in contributing. Please follow the guidelines below.
 
@@ -23,9 +23,9 @@ Thanks for your interest in contributing. Please follow the guidelines below.
 ## Development Setup
 
 ```bash
-git clone https://github.com/ItsMrCodeX/HD2-Companion
-cd HD2-Companion
-dotnet restore HD2Companion.slnx
+git clone https://github.com/ItsMrCodeX/HellDivers2-Stratagem-Deck
+cd HellDivers2-Stratagem-Deck
+dotnet restore StratagemDeck.slnx
 ```
 
 ## Code Style
@@ -49,4 +49,4 @@ dotnet restore HD2Companion.slnx
 
 ## Reporting Issues
 
-Use the issue templates for [bugs](https://github.com/ItsMrCodeX/HD2-Companion/issues/new?template=bug_report.yml) or [feature requests](https://github.com/ItsMrCodeX/HD2-Companion/issues/new?template=feature_request.yml). For general questions, use [Discussions](https://github.com/ItsMrCodeX/HD2-Companion/discussions).
+Use the issue templates for [bugs](https://github.com/ItsMrCodeX/HellDivers2-Stratagem-Deck/issues/new?template=bug_report.yml) or [feature requests](https://github.com/ItsMrCodeX/HellDivers2-Stratagem-Deck/issues/new?template=feature_request.yml). For general questions, use [Discussions](https://github.com/ItsMrCodeX/HellDivers2-Stratagem-Deck/discussions).

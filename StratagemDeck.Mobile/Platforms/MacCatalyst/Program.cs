@@ -1,7 +1,7 @@
 ﻿using ObjCRuntime;
 using UIKit;
 
-namespace HD2Companion.Mobile;
+namespace StratagemDeck.Mobile;
 
 public class Program
 {

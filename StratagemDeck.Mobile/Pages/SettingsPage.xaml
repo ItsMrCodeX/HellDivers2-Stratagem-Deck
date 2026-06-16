@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-             xmlns:vm="clr-namespace:HD2Companion.Mobile.ViewModels"
-             xmlns:conv="clr-namespace:HD2Companion.Mobile.Converters"
-             x:Class="HD2Companion.Mobile.Pages.SettingsPage"
+             xmlns:vm="clr-namespace:StratagemDeck.Mobile.ViewModels"
+             xmlns:conv="clr-namespace:StratagemDeck.Mobile.Converters"
+             x:Class="StratagemDeck.Mobile.Pages.SettingsPage"
              x:DataType="vm:SettingsViewModel"
              Title="Settings"
              Shell.NavBarIsVisible="False"

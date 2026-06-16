@@ -3,9 +3,9 @@ using System.Net.NetworkInformation;
 using System.Net.Sockets;
 using System.Text;
 using System.Text.Json;
-using HD2Companion.Mobile.Models;
+using StratagemDeck.Mobile.Models;
 
-namespace HD2Companion.Mobile.Services;
+namespace StratagemDeck.Mobile.Services;
 
 public class UdpDiscoveryService : IDisposable
 {

@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-             xmlns:vm="clr-namespace:HD2Companion.Mobile.ViewModels"
+             xmlns:vm="clr-namespace:StratagemDeck.Mobile.ViewModels"
              xmlns:zxing="clr-namespace:ZXing.Net.Maui.Controls;assembly=ZXing.Net.MAUI.Controls"
-             x:Class="HD2Companion.Mobile.Pages.QrScanPage"
+             x:Class="StratagemDeck.Mobile.Pages.QrScanPage"
              x:DataType="vm:QrScanViewModel"
              Title="Scan QR"
              Shell.NavBarIsVisible="False"

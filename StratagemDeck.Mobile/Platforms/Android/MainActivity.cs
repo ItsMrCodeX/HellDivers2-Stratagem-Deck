@@ -3,7 +3,7 @@ using Android.Content.PM;
 using Android.OS;
 using Android.Net.Wifi;
 
-namespace HD2Companion.Mobile;
+namespace StratagemDeck.Mobile;
 
 [Activity(
     Theme = "@style/Maui.SplashTheme",
@@ -20,7 +20,7 @@ public class MainActivity : MauiAppCompatActivity
         base.OnCreate(savedInstanceState);
 
         var wifiManager = (WifiManager?)GetSystemService(WifiService);
-        _multicastLock = wifiManager?.CreateMulticastLock("HD2Companion");
+        _multicastLock = wifiManager?.CreateMulticastLock("StratagemDeck");
         _multicastLock?.Acquire();
     }
 

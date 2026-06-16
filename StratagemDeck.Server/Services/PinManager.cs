@@ -1,6 +1,6 @@
 using System.Security.Cryptography;
 
-namespace HD2Companion.Server.Services;
+namespace StratagemDeck.Server.Services;
 
 public class PinManager
 {
