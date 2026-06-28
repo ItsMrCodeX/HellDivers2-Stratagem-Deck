@@ -27,3 +27,6 @@ TestResults/
 *.coverage
 *.log
 tmp/
+graphify-out/*
+extra-files/
+agents.md

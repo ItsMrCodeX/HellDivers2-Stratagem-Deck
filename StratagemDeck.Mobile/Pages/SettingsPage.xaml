@@ -7,7 +7,7 @@
              x:DataType="vm:SettingsViewModel"
              Title="Settings"
              Shell.NavBarIsVisible="False"
-             BackgroundColor="#1A1A2E">
+             BackgroundColor="{StaticResource Canvas}">
 
     <ContentPage.Resources>
         <ResourceDictionary>
@@ -19,10 +19,9 @@
     <ScrollView>
         <VerticalStackLayout Spacing="12" Padding="16" MaximumWidthRequest="500">
 
-            <!-- Connection Status -->
-            <Border BackgroundColor="#16213E"
-                    Stroke="#30363D"
-                    StrokeShape="RoundRectangle 10"
+            <Border BackgroundColor="{StaticResource Surface}"
+                    Stroke="{StaticResource Hairline}"
+                    StrokeShape="RoundRectangle 12"
                     Padding="14">
                 <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12">
                     <Border BackgroundColor="{Binding IsConnected, Converter={StaticResource BoolToColor}}"
@@ -33,67 +32,62 @@
                     <VerticalStackLayout Grid.Column="1" Spacing="4">
                         <Label Text="Connection"
                                FontSize="18"
-                               TextColor="White"
+                               TextColor="{StaticResource OnCanvas}"
                                FontAttributes="Bold" />
                         <Label Text="{Binding ConnectedServer}"
                                FontSize="14"
-                               TextColor="#AAAAAA" />
+                               TextColor="{StaticResource Body}" />
                         <Label Text="{Binding CurrentPin, StringFormat='PIN: {0}'}"
                                FontSize="12"
-                               TextColor="#666666" />
+                               TextColor="{StaticResource Mute}" />
                     </VerticalStackLayout>
                 </Grid>
             </Border>
 
-            <!-- Status -->
             <Label Text="{Binding Status}"
-                   TextColor="#AAAAAA"
+                   TextColor="{StaticResource Body}"
                    FontSize="12"
                    HorizontalOptions="Center" />
 
-            <!-- QR Scan Button -->
             <Button Text="Scan QR Code"
                     FontSize="15"
-                    BackgroundColor="#0F3460"
-                    TextColor="White"
-                    CornerRadius="10"
+                    BackgroundColor="{StaticResource Surface}"
+                    TextColor="{StaticResource OnCanvas}"
+                    CornerRadius="999"
                     HeightRequest="50"
                     Command="{Binding OpenQrScannerCommand}" />
 
-            <!-- Discovered Servers -->
             <Label Text="Discovered Servers"
                    FontSize="14"
-                   TextColor="#888"
+                   TextColor="{StaticResource Body}"
                    FontAttributes="Bold"
                    IsVisible="{Binding IsScanning}" />
 
-            <CollectionView ItemsSource="{Binding DiscoveredServers}"
-                            SelectionMode="None"
-                            HeightRequest="150"
-                            IsVisible="{Binding IsScanning}">
-                <CollectionView.ItemTemplate>
+            <VerticalStackLayout Spacing="6"
+                                 IsVisible="{Binding IsScanning}"
+                                 BindableLayout.ItemsSource="{Binding DiscoveredServers}">
+                <BindableLayout.ItemTemplate>
                     <DataTemplate x:DataType="x:Object">
-                        <Border BackgroundColor="#16213E"
-                                Stroke="#0F3460"
+                        <Border BackgroundColor="{StaticResource Surface}"
+                                Stroke="{StaticResource Hairline}"
                                 StrokeShape="RoundRectangle 8"
                                 Padding="10"
                                 Margin="0,2">
-                            <Grid ColumnDefinitions="*,Auto"
-                                  ColumnSpacing="10">
+                            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10">
                                 <VerticalStackLayout>
                                     <Label Text="{Binding PcName}"
                                            FontSize="14"
-                                           TextColor="White" />
+                                           TextColor="{StaticResource OnCanvas}" />
                                     <Label Text="{Binding IpAddress}"
                                            FontSize="11"
-                                           TextColor="#666" />
+                                           TextColor="{StaticResource Mute}" />
                                 </VerticalStackLayout>
                                 <Button Grid.Column="1"
                                         Text="Connect"
                                         FontSize="12"
-                                        BackgroundColor="#0F3460"
-                                        TextColor="White"
-                                        CornerRadius="6"
+                                        BackgroundColor="{StaticResource SurfaceSoft}"
+                                        TextColor="{StaticResource OnCanvas}"
+                                        CornerRadius="999"
                                         HeightRequest="36"
                                         Padding="14,0"
                                         Command="{Binding Source={RelativeSource AncestorType={x:Type vm:SettingsViewModel}}, Path=ConnectToServerCommand}"
@@ -101,59 +95,47 @@
                             </Grid>
                         </Border>
                     </DataTemplate>
-                </CollectionView.ItemTemplate>
-            </CollectionView>
+                </BindableLayout.ItemTemplate>
+            </VerticalStackLayout>
 
-            <!-- Manual Entry Section -->
-            <Grid ColumnDefinitions="*,Auto"
-                  IsVisible="{Binding ShowManualEntry, Converter={StaticResource InverseBool}, Converter={StaticResource InverseBool}}">
-                <Label Text="Manual Connection"
-                       FontSize="14"
-                       TextColor="#888"
-                       FontAttributes="Bold"
-                       VerticalOptions="Center" />
-            </Grid>
-
-            <Button Text="{Binding ShowManualEntry, StringFormat='{0} Manual Entry'}"
+            <Button Text="Toggle Manual Entry"
                     FontSize="13"
-                    BackgroundColor="#16213E"
-                    TextColor="#AAAAAA"
-                    CornerRadius="8"
+                    BackgroundColor="{StaticResource Surface}"
+                    TextColor="{StaticResource Body}"
+                    CornerRadius="999"
                     Command="{Binding ToggleManualEntryCommand}" />
 
             <VerticalStackLayout Spacing="8"
                                  IsVisible="{Binding ShowManualEntry}">
                 <Entry Placeholder="Server IP (e.g. 192.168.1.100)"
                        Text="{Binding ManualIp}"
-                       TextColor="White"
-                       PlaceholderColor="#555"
-                       BackgroundColor="#16213E"
+                       TextColor="{StaticResource OnCanvas}"
+                       PlaceholderColor="{StaticResource Mute}"
+                       BackgroundColor="{StaticResource Surface}"
                        FontSize="14"
-                        Keyboard="Telephone" />
+                       Keyboard="Telephone" />
                 <Entry Placeholder="PIN (4 digits)"
                        Text="{Binding PinEntry}"
-                       TextColor="White"
-                       PlaceholderColor="#555"
-                       BackgroundColor="#16213E"
+                       TextColor="{StaticResource OnCanvas}"
+                       PlaceholderColor="{StaticResource Mute}"
+                       BackgroundColor="{StaticResource Surface}"
                        FontSize="14"
                        MaxLength="4"
-                       Keyboard="Numeric"
-                       IsPassword="False" />
+                       Keyboard="Numeric" />
                 <Button Text="Connect"
                         FontSize="14"
-                        BackgroundColor="#0F3460"
-                        TextColor="White"
-                        CornerRadius="8"
+                        BackgroundColor="{StaticResource SurfaceSoft}"
+                        TextColor="{StaticResource OnCanvas}"
+                        CornerRadius="999"
                         HeightRequest="44"
                         Command="{Binding ConnectManualCommand}" />
             </VerticalStackLayout>
 
-            <!-- Action Buttons -->
             <Button Text="Rescan"
                     FontSize="14"
-                    BackgroundColor="#16213E"
-                    TextColor="White"
-                    CornerRadius="8"
+                    BackgroundColor="{StaticResource Surface}"
+                    TextColor="{StaticResource OnCanvas}"
+                    CornerRadius="999"
                     HeightRequest="44"
                     Command="{Binding StartScanCommand}"
                     IsVisible="{Binding IsScanning, Converter={StaticResource InverseBool}}" />

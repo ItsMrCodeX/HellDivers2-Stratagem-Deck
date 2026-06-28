@@ -13,7 +13,11 @@ public class UdpDiscoveryService : IDisposable
     private CancellationTokenSource? _cts;
     private bool _isScanning;
 
+    private int _sentCount;
+    private int _responseCount;
+
     public event Action<DiscoveryInfo>? OnServerDiscovered;
+    public event Action<string>? OnLog; // descriptive log for UI
 
     public UdpDiscoveryService(int cmdPort = 12345)
     {
@@ -38,6 +42,7 @@ public class UdpDiscoveryService : IDisposable
     {
         try
         {
+            OnLog?.Invoke($"Pinging {ip}...");
             var ping = new { type = "ping", pin };
             var json = JsonSerializer.Serialize(ping);
             var data = Encoding.UTF8.GetBytes(json);
@@ -49,87 +54,116 @@ public class UdpDiscoveryService : IDisposable
             var result = await client.ReceiveAsync();
             var response = Encoding.UTF8.GetString(result.Buffer);
 
-            return response.Contains("\"type\":\"pong\"");
+            var ok = response.Contains("\"type\":\"pong\"");
+            OnLog?.Invoke(ok ? $"Pong received from {ip}" : $"Invalid response from {ip}");
+            return ok;
         }
-        catch
+        catch (Exception ex)
         {
+            OnLog?.Invoke($"Ping failed: {ex.Message}");
             return false;
         }
     }
 
     private async Task ScanNetwork(CancellationToken ct)
     {
-        var subnets = GetLocalSubnets();
-        if (subnets.Count == 0) return;
+        // Single client for both send and receive so server responses reach us
+        using var client = new UdpClient(0);
 
         var discoverMsg = new { type = "discover" };
         var json = JsonSerializer.Serialize(discoverMsg);
         var data = Encoding.UTF8.GetBytes(json);
 
-        using var listener = new UdpClient(0);
-        listener.Client.ReceiveTimeout = 250;
-
-        foreach (var subnet in subnets)
-        {
-            if (ct.IsCancellationRequested) break;
-
-            var sem = new SemaphoreSlim(20);
-            var tasks = new List<Task>();
-
-            for (int i = 1; i < 255; i++)
-            {
-                if (ct.IsCancellationRequested) break;
-                var ip = $"{subnet}.{i}";
-
-                await sem.WaitAsync(ct);
-                tasks.Add(Task.Run(async () =>
-                {
-                    try
-                    {
-                        using var client = new UdpClient();
-                        client.Client.SendTimeout = 100;
-                        await client.SendAsync(data, new IPEndPoint(IPAddress.Parse(ip), _cmdPort));
-                    }
-                    catch { }
-                    finally { sem.Release(); }
-                }, ct));
-            }
-
-            await Task.WhenAll(tasks);
-        }
-
-        _ = ReceiveResponses(listener, ct);
-    }
-
-    private async Task ReceiveResponses(UdpClient listener, CancellationToken ct)
-    {
-        var seenIps = new HashSet<string>();
+        OnLog?.Invoke("Discovery scan started (continuous)");
 
         while (!ct.IsCancellationRequested)
         {
-            try
+            var subnets = GetLocalSubnets();
+            if (subnets.Count == 0)
             {
-                var result = await listener.ReceiveAsync(ct);
-                var response = Encoding.UTF8.GetString(result.Buffer);
-
-                if (!response.Contains("\"type\":\"discovery\"")) continue;
-
-                var msg = JsonSerializer.Deserialize<DiscoveryMessage>(response);
-                if (msg == null) continue;
-
-                var ip = result.RemoteEndPoint.Address.ToString();
-                if (!seenIps.Add(ip)) continue;
-
-                OnServerDiscovered?.Invoke(new DiscoveryInfo
-                {
-                    PcName = msg.PcName,
-                    IpAddress = ip,
-                    Pin = msg.Pin
-                });
+                OnLog?.Invoke("No subnets found, retrying in 3s...");
+                try { await Task.Delay(3000, ct); } catch (OperationCanceledException) { break; }
+                continue;
             }
+
+            _sentCount = 0;
+            _responseCount = 0;
+
+            foreach (var subnet in subnets)
+            {
+                if (ct.IsCancellationRequested) break;
+
+                var sem = new SemaphoreSlim(20);
+                var tasks = new List<Task>();
+
+                for (int i = 1; i < 255; i++)
+                {
+                    if (ct.IsCancellationRequested) break;
+                    var ip = $"{subnet}.{i}";
+
+                    await sem.WaitAsync(ct);
+                    tasks.Add(Task.Run(async () =>
+                    {
+                        try
+                        {
+                            // Use same client so source port matches
+                            await client.SendAsync(data, new IPEndPoint(IPAddress.Parse(ip), _cmdPort));
+                            Interlocked.Increment(ref _sentCount);
+                        }
+                        catch { }
+                        finally { sem.Release(); }
+                    }, ct));
+                }
+
+                await Task.WhenAll(tasks);
+            }
+
+            OnLog?.Invoke($"Sent {_sentCount} discovers, listening for responses...");
+
+            // Listen for responses with 2s timeout per receive
+            var seenIps = new HashSet<string>();
+            var listenUntil = DateTime.UtcNow.AddSeconds(3);
+
+            while (DateTime.UtcNow < listenUntil && !ct.IsCancellationRequested)
+            {
+                try
+                {
+                    using var timeoutCts = CancellationTokenSource.CreateLinkedTokenSource(ct);
+                    timeoutCts.CancelAfter(2000);
+
+                    var result = await client.ReceiveAsync(timeoutCts.Token);
+                    var response = Encoding.UTF8.GetString(result.Buffer);
+
+                    if (!response.Contains("\"type\":\"discovery\"")) continue;
+
+                    var msg = JsonSerializer.Deserialize<DiscoveryMessage>(response);
+                    if (msg == null) continue;
+
+                    var ip = result.RemoteEndPoint.Address.ToString();
+                    if (!seenIps.Add(ip)) continue;
+
+                    Interlocked.Increment(ref _responseCount);
+                    OnLog?.Invoke($"Discovered server {msg.pc} at {ip}");
+                    OnServerDiscovered?.Invoke(new DiscoveryInfo
+                    {
+                        PcName = msg.pc,
+                        IpAddress = ip,
+                        Pin = msg.pin
+                    });
+                }
+                catch (OperationCanceledException) { break; }
+                catch (SocketException) { }
+                catch { }
+            }
+
+            OnLog?.Invoke($"Scan cycle complete ({_responseCount} servers found)");
+
+            // Wait before next scan
+            try { await Task.Delay(5000, ct); }
             catch (OperationCanceledException) { break; }
-            catch { break; }
         }
+
+        OnLog?.Invoke("Discovery scan stopped");
     }
 
     private static List<string> GetLocalSubnets()
@@ -158,8 +192,8 @@ public class UdpDiscoveryService : IDisposable
 
     private class DiscoveryMessage
     {
-        public string Type { get; set; } = string.Empty;
-        public string PcName { get; set; } = string.Empty;
-        public string Pin { get; set; } = string.Empty;
+        public string type { get; set; } = string.Empty;
+        public string pc { get; set; } = string.Empty;
+        public string pin { get; set; } = string.Empty;
     }
 }

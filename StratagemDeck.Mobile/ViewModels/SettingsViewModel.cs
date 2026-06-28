@@ -68,6 +68,7 @@ public class SettingsViewModel : INotifyPropertyChanged
         _discovery = discovery;
 
         _discovery.OnServerDiscovered += OnServerDiscovered;
+        _discovery.OnLog += msg => MainThread.BeginInvokeOnMainThread(() => Status = msg);
 
         ConnectToServerCommand = new Command<DiscoveryInfo>(async (d) => await ConnectToServer(d));
         ConnectManualCommand = new Command(async () => await ConnectManual());

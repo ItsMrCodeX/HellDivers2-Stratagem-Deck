@@ -1,16 +1,8 @@
 ﻿using StratagemDeck.Server.Services;
 using QRCoder;
 
-var cmdPort = 12345;
-var pinManager = new PinManager();
-
-Console.Title = "Stratagem Deck Server";
-Console.ForegroundColor = ConsoleColor.Cyan;
-Console.WriteLine("╔════════════════════════════════╗");
-Console.WriteLine("║   Stratagem Deck Server v1.0   ║");
-Console.WriteLine("╚════════════════════════════════╝");
-Console.ResetColor();
-Console.WriteLine();
+const int cmdPort = 12345;
+const int broadcastPort = 12346;
 
 var localIps = System.Net.NetworkInformation.NetworkInterface.GetAllNetworkInterfaces()
     .Where(n => n.OperationalStatus == System.Net.NetworkInformation.OperationalStatus.Up)
@@ -20,58 +12,61 @@ var localIps = System.Net.NetworkInformation.NetworkInterface.GetAllNetworkInter
     .Where(ip => !ip.StartsWith("127."))
     .ToList();
 
-var mainIp = localIps.LastOrDefault() ?? "0.0.0.0";
+if (localIps.Count == 0) localIps.Add("0.0.0.0");
+var pinManager = new PinManager();
+var initialQr = GenerateQrCode(localIps[^1], pinManager.CurrentPin);
 
-Console.WriteLine($"IPs: {string.Join(", ", localIps)}");
-Console.WriteLine($"PIN: {pinManager.CurrentPin}");
-Console.WriteLine($"Listening on UDP port {cmdPort}");
-Console.WriteLine();
-
-PrintQrCode(mainIp, pinManager.CurrentPin);
-
-Console.ForegroundColor = ConsoleColor.DarkGray;
-Console.WriteLine("Commands:");
-Console.WriteLine("  R - Regenerate PIN");
-Console.WriteLine("  Q - Quit");
-Console.ResetColor();
-Console.WriteLine();
+Console.Title = "Stratagem Deck Server";
+using var tui = new TerminalLayout();
+tui.Initialize(localIps, pinManager.CurrentPin, initialQr);
 
 using var listener = new CommandListener(pinManager, cmdPort);
+using var broadcaster = new DiscoveryBroadcaster(pinManager, broadcastPort);
 
-listener.OnStatusChanged += msg =>
+listener.OnStatusChanged += (category, msg) =>
 {
-    Console.ForegroundColor = msg.Contains("Executing") ? ConsoleColor.Yellow : ConsoleColor.Green;
-    Console.WriteLine($"[{DateTime.Now:HH:mm:ss}] {msg}");
-    Console.ResetColor();
+    tui.EnqueueLog(new LogEntry(msg, category, DateTime.Now));
+    // Block injected arrow keys from SendInput while stratagem executes
+    if (category == LogCategory.Stratagem && msg.StartsWith("Executing:"))
+        tui.IgnoreInput = true;
+    else if (category == LogCategory.Success && (msg == "Ready" || msg.StartsWith("Done")))
+        tui.IgnoreInput = false;
 };
 
-listener.Start();
-
-while (true)
+var cycleQr = () =>
 {
-    var key = Console.ReadKey(true);
-    if (key.Key == ConsoleKey.Q) break;
-    if (key.Key == ConsoleKey.R)
-    {
-        pinManager.Regenerate();
-        Console.ForegroundColor = ConsoleColor.Cyan;
-        Console.WriteLine($"New PIN: {pinManager.CurrentPin}");
-        Console.ResetColor();
-        PrintQrCode(mainIp, pinManager.CurrentPin);
-    }
-}
+    var ip = tui.CurrentIp;
+    var qr = GenerateQrCode(ip, pinManager.CurrentPin);
+    tui.UpdateQrCode(ip, pinManager.CurrentPin, qr);
+    tui.EnqueueLog(new LogEntry($"Switched IP to {ip}", LogCategory.System, DateTime.Now));
+};
+
+tui.OnRegenerateRequested += () =>
+{
+    pinManager.Regenerate();
+    var qr = GenerateQrCode(tui.CurrentIp, pinManager.CurrentPin);
+    tui.UpdateQrCode(tui.CurrentIp, pinManager.CurrentPin, qr);
+    tui.EnqueueLog(new LogEntry($"PIN regenerated: {pinManager.CurrentPin}", LogCategory.System, DateTime.Now));
+};
+
+tui.OnIpCycleRequested += _ => cycleQr();
+
+tui.EnqueueLog(new LogEntry($"Listening on UDP {cmdPort} ", LogCategory.Info, DateTime.Now));
+tui.EnqueueLog(new LogEntry($"Broadcasting on UDP {broadcastPort} ", LogCategory.Info, DateTime.Now));
+
+listener.Start();
+broadcaster.Start();
+
+tui.Run();
 
 listener.Stop();
-Console.WriteLine("Server stopped.");
+broadcaster.Stop();
 
-static void PrintQrCode(string ip, string pin)
+static string GenerateQrCode(string ip, string pin)
 {
     var payload = $"{ip}:{pin}";
     using var qrGenerator = new QRCodeGenerator();
     using var qrData = qrGenerator.CreateQrCode(payload, QRCodeGenerator.ECCLevel.L);
     using var qrCode = new AsciiQRCode(qrData);
-    var qr = qrCode.GetGraphic(1, drawQuietZones: true);
-    Console.ForegroundColor = ConsoleColor.White;
-    Console.WriteLine(qr);
-    Console.ResetColor();
+    return qrCode.GetGraphic(1, "█", " ", drawQuietZones: false);
 }

@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
@@ -14,7 +15,7 @@ public class CommandListener : IDisposable
     private readonly CancellationTokenSource _cts = new();
     private bool _receiving;
 
-    public event Action<string>? OnStatusChanged;
+    public event Action<LogCategory, string>? OnStatusChanged;
 
     public CommandListener(PinManager pinManager, int port = 12345)
     {
@@ -57,7 +58,7 @@ public class CommandListener : IDisposable
                 {
                     var cmd = JsonSerializer.Deserialize<StratagemCommand>(json);
                     if (cmd != null)
-                        await HandleStratagem(cmd);
+                        await HandleStratagem(result.RemoteEndPoint, cmd);
                 }
             }
             catch (OperationCanceledException) { break; }
@@ -67,6 +68,8 @@ public class CommandListener : IDisposable
 
     private async Task HandleDiscover(IPEndPoint sender)
     {
+        OnStatusChanged?.Invoke(LogCategory.Network, $"Discover from {sender.Address}:{sender.Port}");
+
         var msg = new DiscoveryMessage
         {
             PcName = Environment.MachineName,
@@ -74,39 +77,61 @@ public class CommandListener : IDisposable
         };
         var data = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(msg));
         await _udp.SendAsync(data, sender);
+
+        OnStatusChanged?.Invoke(LogCategory.Network, $"Discovery response sent to {sender.Address}");
     }
 
     private async Task HandlePing(IPEndPoint sender, string json)
     {
         var ping = JsonSerializer.Deserialize<PingMessage>(json);
-        if (ping == null || !_pinManager.Validate(ping.Pin)) return;
+        if (ping == null || !_pinManager.Validate(ping.Pin))
+        {
+            OnStatusChanged?.Invoke(LogCategory.Error, $"Invalid ping from {sender.Address}");
+            return;
+        }
+
+        OnStatusChanged?.Invoke(LogCategory.Network, $"Ping from {sender.Address}");
 
         var pong = new PongMessage { PcName = Environment.MachineName };
         var data = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(pong));
         await _udp.SendAsync(data, sender);
+
+        OnStatusChanged?.Invoke(LogCategory.Network, $"Pong sent to {sender.Address}");
     }
 
-    private async Task HandleStratagem(StratagemCommand cmd)
+    private async Task HandleStratagem(IPEndPoint sender, StratagemCommand cmd)
     {
-        if (!_pinManager.Validate(cmd.Pin)) return;
+        if (!_pinManager.Validate(cmd.Pin))
+        {
+            OnStatusChanged?.Invoke(LogCategory.Error, $"Invalid stratagem PIN from {sender.Address}");
+            return;
+        }
 
         if (_receiving)
         {
-            OnStatusChanged?.Invoke($"Busy - ignoring {cmd.Name}");
+            OnStatusChanged?.Invoke(LogCategory.Error, $"Busy - ignoring {cmd.Name}");
             return;
         }
 
         _receiving = true;
-        OnStatusChanged?.Invoke($"Executing: {cmd.Name}");
+        var sw = Stopwatch.StartNew();
+        OnStatusChanged?.Invoke(LogCategory.Stratagem, $"Executing: {cmd.Name}");
 
         try
         {
             await KeyInjector.ExecuteSequence(cmd.Keys);
+            sw.Stop();
+            OnStatusChanged?.Invoke(LogCategory.Success, $"Done ({sw.ElapsedMilliseconds}ms)");
+        }
+        catch (Exception ex)
+        {
+            sw.Stop();
+            OnStatusChanged?.Invoke(LogCategory.Error, $"Failed ({sw.ElapsedMilliseconds}ms): {ex.Message}");
         }
         finally
         {
             _receiving = false;
-            OnStatusChanged?.Invoke("Ready");
+            OnStatusChanged?.Invoke(LogCategory.Success, "Ready");
         }
     }
 

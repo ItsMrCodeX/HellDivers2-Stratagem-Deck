@@ -8,7 +8,7 @@
              x:DataType="vm:GameViewModel"
              Title="Game"
              Shell.NavBarIsVisible="False"
-             BackgroundColor="#0D1117">
+             BackgroundColor="{StaticResource Canvas}">
 
     <ContentPage.Resources>
         <ResourceDictionary>
@@ -16,85 +16,80 @@
         </ResourceDictionary>
     </ContentPage.Resources>
 
-    <Grid RowDefinitions="Auto,2*,*" Padding="4" RowSpacing="4" VerticalOptions="FillAndExpand">
+    <Grid RowDefinitions="Auto,2*,*" Padding="4" RowSpacing="4" VerticalOptions="Fill">
 
         <Grid Grid.Row="0" ColumnDefinitions="Auto,*" ColumnSpacing="6" Padding="2">
             <Border BackgroundColor="{Binding IsConnected, Converter={StaticResource BoolToColor}}"
                      WidthRequest="10" HeightRequest="10" StrokeShape="RoundRectangle 5"
                      Stroke="Transparent" VerticalOptions="Center" />
-            <Label Grid.Column="1" Text="{Binding Status}" TextColor="#888888" FontSize="10"
+            <Label Grid.Column="1" Text="{Binding Status}" TextColor="{StaticResource Body}" FontSize="10"
                    VerticalOptions="Center" HorizontalOptions="Start" />
         </Grid>
 
-        <Grid Grid.Row="1" ColumnDefinitions="*,*,*,*" ColumnSpacing="6" VerticalOptions="FillAndExpand">
-            <!-- Slot 0 -->
-            <Border Grid.Column="0" BackgroundColor="#1E2430" Stroke="#30363D" StrokeThickness="2"
-                    StrokeShape="RoundRectangle 12" Padding="4" VerticalOptions="FillAndExpand">
+        <Grid Grid.Row="1" ColumnDefinitions="*,*,*,*" ColumnSpacing="6" VerticalOptions="Fill">
+            <Border Grid.Column="0" BackgroundColor="{StaticResource Surface}" Stroke="{StaticResource HairlineStrong}" StrokeThickness="2"
+                    StrokeShape="RoundRectangle 12" Padding="4" VerticalOptions="Fill">
                 <Border.GestureRecognizers>
                     <TapGestureRecognizer Command="{Binding TapSlotCommand}" CommandParameter="0" />
                 </Border.GestureRecognizers>
                 <Grid RowDefinitions="*,Auto" RowSpacing="1" InputTransparent="True">
                     <Image Grid.Row="0" Source="{Binding Slot0Icon}" Aspect="AspectFit"
                            VerticalOptions="Center" HorizontalOptions="Center" Margin="4" />
-                    <Label Grid.Row="1" Text="{Binding Slot0Name, TargetNullValue='—'}" FontSize="11" TextColor="#E2E2E2"
+                    <Label Grid.Row="1" Text="{Binding Slot0Name, TargetNullValue='—'}" FontSize="11" TextColor="{StaticResource OnCanvasMute}"
                            HorizontalOptions="Center" HorizontalTextAlignment="Center"
                            LineBreakMode="TailTruncation" MaxLines="2" />
                 </Grid>
             </Border>
-            <!-- Slot 1 -->
-            <Border Grid.Column="1" BackgroundColor="#1E2430" Stroke="#30363D" StrokeThickness="2"
-                    StrokeShape="RoundRectangle 12" Padding="4" VerticalOptions="FillAndExpand">
+            <Border Grid.Column="1" BackgroundColor="{StaticResource Surface}" Stroke="{StaticResource HairlineStrong}" StrokeThickness="2"
+                    StrokeShape="RoundRectangle 12" Padding="4" VerticalOptions="Fill">
                 <Border.GestureRecognizers>
                     <TapGestureRecognizer Command="{Binding TapSlotCommand}" CommandParameter="1" />
                 </Border.GestureRecognizers>
                 <Grid RowDefinitions="*,Auto" RowSpacing="1" InputTransparent="True">
                     <Image Grid.Row="0" Source="{Binding Slot1Icon}" Aspect="AspectFit"
                            VerticalOptions="Center" HorizontalOptions="Center" Margin="4" />
-                    <Label Grid.Row="1" Text="{Binding Slot1Name, TargetNullValue='—'}" FontSize="11" TextColor="#E2E2E2"
+                    <Label Grid.Row="1" Text="{Binding Slot1Name, TargetNullValue='—'}" FontSize="11" TextColor="{StaticResource OnCanvasMute}"
                            HorizontalOptions="Center" HorizontalTextAlignment="Center"
                            LineBreakMode="TailTruncation" MaxLines="2" />
                 </Grid>
             </Border>
-            <!-- Slot 2 -->
-            <Border Grid.Column="2" BackgroundColor="#1E2430" Stroke="#30363D" StrokeThickness="2"
-                    StrokeShape="RoundRectangle 12" Padding="4" VerticalOptions="FillAndExpand">
+            <Border Grid.Column="2" BackgroundColor="{StaticResource Surface}" Stroke="{StaticResource HairlineStrong}" StrokeThickness="2"
+                    StrokeShape="RoundRectangle 12" Padding="4" VerticalOptions="Fill">
                 <Border.GestureRecognizers>
                     <TapGestureRecognizer Command="{Binding TapSlotCommand}" CommandParameter="2" />
                 </Border.GestureRecognizers>
                 <Grid RowDefinitions="*,Auto" RowSpacing="1" InputTransparent="True">
                     <Image Grid.Row="0" Source="{Binding Slot2Icon}" Aspect="AspectFit"
                            VerticalOptions="Center" HorizontalOptions="Center" Margin="4" />
-                    <Label Grid.Row="1" Text="{Binding Slot2Name, TargetNullValue='—'}" FontSize="11" TextColor="#E2E2E2"
+                    <Label Grid.Row="1" Text="{Binding Slot2Name, TargetNullValue='—'}" FontSize="11" TextColor="{StaticResource OnCanvasMute}"
                            HorizontalOptions="Center" HorizontalTextAlignment="Center"
                            LineBreakMode="TailTruncation" MaxLines="2" />
                 </Grid>
             </Border>
-            <!-- Slot 3 -->
-            <Border Grid.Column="3" BackgroundColor="#1E2430" Stroke="#30363D" StrokeThickness="2"
-                    StrokeShape="RoundRectangle 12" Padding="4" VerticalOptions="FillAndExpand">
+            <Border Grid.Column="3" BackgroundColor="{StaticResource Surface}" Stroke="{StaticResource HairlineStrong}" StrokeThickness="2"
+                    StrokeShape="RoundRectangle 12" Padding="4" VerticalOptions="Fill">
                 <Border.GestureRecognizers>
                     <TapGestureRecognizer Command="{Binding TapSlotCommand}" CommandParameter="3" />
                 </Border.GestureRecognizers>
                 <Grid RowDefinitions="*,Auto" RowSpacing="1" InputTransparent="True">
                     <Image Grid.Row="0" Source="{Binding Slot3Icon}" Aspect="AspectFit"
                            VerticalOptions="Center" HorizontalOptions="Center" Margin="4" />
-                    <Label Grid.Row="1" Text="{Binding Slot3Name, TargetNullValue='—'}" FontSize="11" TextColor="#E2E2E2"
+                    <Label Grid.Row="1" Text="{Binding Slot3Name, TargetNullValue='—'}" FontSize="11" TextColor="{StaticResource OnCanvasMute}"
                            HorizontalOptions="Center" HorizontalTextAlignment="Center"
                            LineBreakMode="TailTruncation" MaxLines="2" />
                 </Grid>
             </Border>
         </Grid>
 
-        <!-- Mission Slot -->
-        <Border Grid.Row="2" BackgroundColor="#1E2430" Stroke="#3B82F6" StrokeThickness="1"
-                StrokeShape="RoundRectangle 10" Padding="6" Margin="8,1" VerticalOptions="FillAndExpand">
+        <Border Grid.Row="2" BackgroundColor="{StaticResource Surface}" Stroke="{StaticResource AccentActive}" StrokeThickness="1"
+                StrokeShape="RoundRectangle 10" Padding="6" Margin="8,1" VerticalOptions="Fill">
             <Grid RowDefinitions="Auto,*" RowSpacing="2">
-                <Label Grid.Row="0" Text="MISSION" FontSize="11" TextColor="#3B82F6" FontAttributes="Bold" />
+                <Label Grid.Row="0" Text="MISSION" FontSize="11" TextColor="{StaticResource AccentActive}" FontAttributes="Bold" />
                 <ScrollView Grid.Row="1" Orientation="Horizontal" HorizontalScrollBarVisibility="Never">
                     <HorizontalStackLayout Spacing="6" BindableLayout.ItemsSource="{Binding MissionStrats}">
                         <BindableLayout.ItemTemplate>
                             <DataTemplate x:DataType="models:Stratagem">
-                                <Border BackgroundColor="#30363D" StrokeShape="RoundRectangle 10"
+                                <Border BackgroundColor="{StaticResource SurfaceSoft}" StrokeShape="RoundRectangle 10"
                                         Stroke="Transparent" Padding="6" MinimumWidthRequest="70" HeightRequest="70">
                                     <Border.GestureRecognizers>
                                         <TapGestureRecognizer
@@ -104,7 +99,7 @@
                                     <VerticalStackLayout VerticalOptions="Center" HorizontalOptions="Center" Spacing="1">
                                         <Image Source="{Binding IconSource}" WidthRequest="34" HeightRequest="34"
                                                Aspect="AspectFit" HorizontalOptions="Center" />
-                                        <Label Text="{Binding Name}" FontSize="9" TextColor="#E2E2E2"
+                                        <Label Text="{Binding Name}" FontSize="9" TextColor="{StaticResource OnCanvasMute}"
                                                HorizontalOptions="Center" HorizontalTextAlignment="Center"
                                                LineBreakMode="TailTruncation" MaxLines="1" />
                                     </VerticalStackLayout>

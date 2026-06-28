@@ -20,7 +20,8 @@ public partial class QrScanPage : ContentPage
             AutoRotate = true,
             Multiple = false,
             TryHarder = true,
-            TryInverted = true
+            TryInverted = true,
+            Formats = BarcodeFormat.QrCode,
         };
         BarcodeView.CameraLocation = CameraLocation.Rear;
 
@@ -49,6 +50,19 @@ public partial class QrScanPage : ContentPage
         };
     }
 
+    protected override void OnAppearing()
+    {
+        base.OnAppearing();
+        _vm.IsScanning = true;
+        BarcodeView.IsDetecting = true;
+    }
+
+    protected override void OnDisappearing()
+    {
+        base.OnDisappearing();
+        BarcodeView.IsDetecting = false;
+    }
+
     private async void OnCancel(object? sender, EventArgs e)
     {
         _vm.IsScanning = false;
@@ -66,7 +80,7 @@ public partial class QrScanPage : ContentPage
         if (status != PermissionStatus.Granted)
         {
             _vm.Status = "Camera permission required";
-            await Shell.Current.DisplayAlert("Permission", "Camera access is needed to scan QR codes", "OK");
+            await Shell.Current.DisplayAlertAsync("Permission", "Camera access is needed to scan QR codes", "OK");
             await Shell.Current.GoToAsync("..");
         }
     }

@@ -7,7 +7,7 @@
              x:Class="StratagemDeck.Mobile.MainPage"
              x:DataType="vm:MainViewModel"
              Shell.NavBarIsVisible="False"
-             BackgroundColor="#1A1A2E">
+             BackgroundColor="{StaticResource Canvas}">
 
     <ContentPage.Resources>
         <ResourceDictionary>
@@ -33,13 +33,13 @@
                          VerticalOptions="Center" />
                 <Label Grid.Column="1"
                        Text="{Binding Status}"
-                       TextColor="#AAAAAA"
+                       TextColor="{StaticResource Body}"
                        FontSize="11"
                        VerticalOptions="Center"
                        HorizontalOptions="Center" />
                 <Label Grid.Column="2"
                        Text="{Binding ServerName}"
-                       TextColor="#666666"
+                       TextColor="{StaticResource Mute}"
                        FontSize="10"
                        VerticalOptions="Center" />
             </Grid>
@@ -56,7 +56,7 @@
 
                     <!-- Slot 0 -->
                     <Border Grid.Column="0"
-                            BackgroundColor="#16213E"
+                            BackgroundColor="{StaticResource Surface}"
                             Stroke="{Binding SelectedSlotIndex, Converter={StaticResource SlotSelected}, ConverterParameter=0}"
                             StrokeThickness="2"
                             StrokeShape="RoundRectangle 10"
@@ -74,7 +74,7 @@
                                    HorizontalOptions="Center" />
                             <Label Text="{Binding Slots[0].SelectedStratagem.Name, TargetNullValue='Tap'}"
                                    FontSize="10"
-                                   TextColor="#E2E2E2"
+                                   TextColor="{StaticResource OnCanvasMute}"
                                    HorizontalOptions="Center"
                                    HorizontalTextAlignment="Center"
                                    LineBreakMode="TailTruncation"
@@ -84,7 +84,7 @@
 
                     <!-- Slot 1 -->
                     <Border Grid.Column="1"
-                            BackgroundColor="#16213E"
+                            BackgroundColor="{StaticResource Surface}"
                             Stroke="{Binding SelectedSlotIndex, Converter={StaticResource SlotSelected}, ConverterParameter=1}"
                             StrokeThickness="2"
                             StrokeShape="RoundRectangle 10"
@@ -102,7 +102,7 @@
                                    HorizontalOptions="Center" />
                             <Label Text="{Binding Slots[1].SelectedStratagem.Name, TargetNullValue='Tap'}"
                                    FontSize="10"
-                                   TextColor="#E2E2E2"
+                                   TextColor="{StaticResource OnCanvasMute}"
                                    HorizontalOptions="Center"
                                    HorizontalTextAlignment="Center"
                                    LineBreakMode="TailTruncation"
@@ -112,7 +112,7 @@
 
                     <!-- Slot 2 -->
                     <Border Grid.Column="2"
-                            BackgroundColor="#16213E"
+                            BackgroundColor="{StaticResource Surface}"
                             Stroke="{Binding SelectedSlotIndex, Converter={StaticResource SlotSelected}, ConverterParameter=2}"
                             StrokeThickness="2"
                             StrokeShape="RoundRectangle 10"
@@ -130,7 +130,7 @@
                                    HorizontalOptions="Center" />
                             <Label Text="{Binding Slots[2].SelectedStratagem.Name, TargetNullValue='Tap'}"
                                    FontSize="10"
-                                   TextColor="#E2E2E2"
+                                   TextColor="{StaticResource OnCanvasMute}"
                                    HorizontalOptions="Center"
                                    HorizontalTextAlignment="Center"
                                    LineBreakMode="TailTruncation"
@@ -141,7 +141,7 @@
 
                 <!-- Mission Slot -->
                 <Border Grid.Row="1"
-                        BackgroundColor="#16213E"
+                        BackgroundColor="{StaticResource Surface}"
                         Stroke="{Binding SelectedSlotIndex, Converter={StaticResource SlotSelected}, ConverterParameter=3}"
                         StrokeThickness="2"
                         StrokeShape="RoundRectangle 10"
@@ -153,7 +153,7 @@
                     <Grid ColumnDefinitions="Auto,Auto,*" ColumnSpacing="10">
                         <Label Text="MISSION"
                                FontSize="12"
-                               TextColor="#3B82F6"
+                               TextColor="{StaticResource AccentActive}"
                                FontAttributes="Bold"
                                VerticalOptions="Center" />
                         <Image Grid.Column="1"
@@ -165,7 +165,7 @@
                         <Label Grid.Column="2"
                                Text="{Binding Slots[3].SelectedStratagem.Name, TargetNullValue='Tap to set mission'}"
                                FontSize="13"
-                               TextColor="#E2E2E2"
+                               TextColor="{StaticResource OnCanvasMute}"
                                VerticalOptions="Center"
                                HorizontalOptions="Center"
                                HorizontalTextAlignment="Center"
@@ -209,10 +209,10 @@
                 </CollectionView.ItemsLayout>
                 <CollectionView.ItemTemplate>
                     <DataTemplate x:DataType="models:Stratagem">
-                        <Border BackgroundColor="#16213E"
-                                Stroke="#0F3460"
+                        <Border BackgroundColor="{StaticResource Surface}"
+                                Stroke="{StaticResource Hairline}"
                                 StrokeThickness="1"
-                                StrokeShape="RoundRectangle 6"
+                                StrokeShape="RoundRectangle 8"
                                 Padding="4"
                                 HeightRequest="84">
                             <Border.GestureRecognizers>
@@ -220,9 +220,9 @@
                                     Command="{Binding Source={RelativeSource AncestorType={x:Type vm:MainViewModel}}, Path=TapStratagemCommand}"
                                     CommandParameter="{Binding .}" />
                             </Border.GestureRecognizers>
-                            <StackLayout VerticalOptions="Center"
-                                         HorizontalOptions="Center"
-                                         Spacing="3">
+                            <VerticalStackLayout VerticalOptions="Center"
+                                                 HorizontalOptions="Center"
+                                                 Spacing="2">
                                 <Image Source="{Binding IconSource}"
                                        WidthRequest="38"
                                        HeightRequest="38"
@@ -230,12 +230,12 @@
                                        HorizontalOptions="Center" />
                                 <Label Text="{Binding Name}"
                                        FontSize="9"
-                                       TextColor="#CCCCCC"
+                                       TextColor="{StaticResource OnCanvasMute}"
                                        HorizontalOptions="Center"
                                        HorizontalTextAlignment="Center"
                                        LineBreakMode="TailTruncation"
                                        MaxLines="2" />
-                            </StackLayout>
+                            </VerticalStackLayout>
                         </Border>
                     </DataTemplate>
                 </CollectionView.ItemTemplate>

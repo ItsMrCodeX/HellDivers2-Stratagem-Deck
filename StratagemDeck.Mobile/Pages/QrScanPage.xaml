@@ -17,17 +17,17 @@
 
         <VerticalStackLayout Grid.Row="1"
                              Padding="16,8"
-                             BackgroundColor="#1A1A2E"
+                             BackgroundColor="{StaticResource Canvas}"
                              Spacing="8">
             <Label Text="{Binding Status}"
-                   TextColor="White"
+                   TextColor="{StaticResource Body}"
                    FontSize="14"
                    HorizontalOptions="Center" />
             <Button Text="Cancel"
                      FontSize="14"
-                     BackgroundColor="#5C1A1A"
-                     TextColor="White"
-                     CornerRadius="8"
+                     BackgroundColor="{StaticResource Error}"
+                     TextColor="{StaticResource OnCanvas}"
+                     CornerRadius="999"
                      HeightRequest="40"
                      Clicked="OnCancel" />
         </VerticalStackLayout>

@@ -6,8 +6,8 @@
     xmlns:pages="clr-namespace:StratagemDeck.Mobile.Pages"
     Shell.FlyoutBehavior="Disabled"
     Shell.TabBarBackgroundColor="#0D1117"
-    Shell.TabBarTitleColor="#E2E2E2"
-    Shell.TabBarUnselectedColor="#555555"
+    Shell.TabBarTitleColor="#FFFFFF"
+    Shell.TabBarUnselectedColor="#484F58"
     Shell.BackgroundColor="#0D1117">
 
     <TabBar>

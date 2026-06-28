@@ -15,8 +15,9 @@ public static class MauiProgram
             .UseBarcodeReader()
             .ConfigureFonts(fonts =>
             {
-                fonts.AddFont("OpenSans-Regular.ttf", "OpenSansRegular");
-                fonts.AddFont("OpenSans-Semibold.ttf", "OpenSansSemibold");
+                fonts.AddFont("Nunito-Regular.ttf", "NunitoRegular");
+                fonts.AddFont("Nunito-SemiBold.ttf", "NunitoSemiBold");
+                fonts.AddFont("Nunito-Bold.ttf", "NunitoBold");
             });
 
         builder.Services.AddSingleton<StratagemDataService>();
