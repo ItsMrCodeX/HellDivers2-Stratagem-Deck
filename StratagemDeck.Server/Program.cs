@@ -2,7 +2,6 @@
 using QRCoder;
 
 const int cmdPort = 12345;
-const int broadcastPort = 12346;
 
 var localIps = System.Net.NetworkInformation.NetworkInterface.GetAllNetworkInterfaces()
     .Where(n => n.OperationalStatus == System.Net.NetworkInformation.OperationalStatus.Up)
@@ -21,7 +20,6 @@ using var tui = new TerminalLayout();
 tui.Initialize(localIps, pinManager.CurrentPin, initialQr);
 
 using var listener = new CommandListener(pinManager, cmdPort);
-using var broadcaster = new DiscoveryBroadcaster(pinManager, broadcastPort);
 
 listener.OnStatusChanged += (category, msg) =>
 {
@@ -52,21 +50,18 @@ tui.OnRegenerateRequested += () =>
 tui.OnIpCycleRequested += _ => cycleQr();
 
 tui.EnqueueLog(new LogEntry($"Listening on UDP {cmdPort} ", LogCategory.Info, DateTime.Now));
-tui.EnqueueLog(new LogEntry($"Broadcasting on UDP {broadcastPort} ", LogCategory.Info, DateTime.Now));
 
 listener.Start();
-broadcaster.Start();
 
 tui.Run();
 
 listener.Stop();
-broadcaster.Stop();
 
 static string GenerateQrCode(string ip, string pin)
 {
     var payload = $"{ip}:{pin}";
     using var qrGenerator = new QRCodeGenerator();
-    using var qrData = qrGenerator.CreateQrCode(payload, QRCodeGenerator.ECCLevel.L);
+    using var qrData = qrGenerator.CreateQrCode(payload, QRCodeGenerator.ECCLevel.Q);
     using var qrCode = new AsciiQRCode(qrData);
     return qrCode.GetGraphic(1, "█", " ", drawQuietZones: false);
 }

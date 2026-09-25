@@ -1,4 +1,5 @@
 using System.Text.Json;
+using System.Security.Cryptography;
 using StratagemDeck.Mobile.Models;
 using SkiaSharp;
 using Svg.Skia;
@@ -40,40 +41,54 @@ public class StratagemDataService
             var list = new List<Stratagem>();
             foreach (var (name, entry) in strats)
             {
-                var strat = new Stratagem
+                list.Add(new Stratagem
                 {
                     Name = name,
                     Category = category,
                     ShortName = entry.ShortName,
                     Keys = entry.Keys.Split(' ', StringSplitOptions.RemoveEmptyEntries).ToList()
-                };
-
-                strat.IconSource = await LoadIconAsync(strat);
-
-                list.Add(strat);
+                });
             }
             _byCategory[category] = list;
         }
+
+        var all = _byCategory.Values.SelectMany(x => x).ToList();
+        await Parallel.ForEachAsync(
+            all,
+            new ParallelOptions { MaxDegreeOfParallelism = Environment.ProcessorCount },
+            async (strat, _) => strat.IconSource = await LoadIconAsync(strat));
     }
 
     private async Task<ImageSource?> LoadIconAsync(Stratagem strat)
     {
         var iconName = strat.GetNormalizedFileName();
-        var cacheKey = Path.GetFileNameWithoutExtension(iconName).Replace("/", "_") + ".png";
+
+        byte[] svgBytes;
+        try
+        {
+            using var iconStream = await FileSystem.OpenAppPackageFileAsync(iconName);
+            using var ms = new MemoryStream();
+            await iconStream.CopyToAsync(ms);
+            svgBytes = ms.ToArray();
+        }
+        catch
+        {
+            return null;
+        }
+
+        var hash = Convert.ToHexString(SHA256.HashData(svgBytes))[..16];
+        var baseName = Path.GetFileNameWithoutExtension(iconName);
+        var cacheKey = $"{baseName}_{hash}.png";
         var cachePath = Path.Combine(CacheDir, cacheKey);
 
         if (!File.Exists(cachePath))
         {
-            try
+            using var svgStream = new MemoryStream(svgBytes);
+            var pngBytes = DecodeSvgToPng(svgStream);
+            if (pngBytes != null)
             {
-                using var iconStream = await FileSystem.OpenAppPackageFileAsync(iconName);
-                var pngBytes = DecodeSvgToPng(iconStream);
-                if (pngBytes != null)
-                    await File.WriteAllBytesAsync(cachePath, pngBytes);
-            }
-            catch
-            {
-                return null;
+                try { await File.WriteAllBytesAsync(cachePath, pngBytes); }
+                catch { return null; }
             }
         }
 
@@ -84,25 +99,35 @@ public class StratagemDataService
 
     private static byte[]? DecodeSvgToPng(Stream svgStream)
     {
-        using var svg = new SKSvg();
-        svg.Load(svgStream);
-        if (svg.Picture == null)
+        try
+        {
+            using var svg = new SKSvg();
+            svg.Load(svgStream);
+            if (svg.Picture == null)
+                return null;
+
+            var size = svg.Picture.CullRect;
+            if (size.Width <= 0 || size.Height <= 0)
+                return null;
+
+            float maxDim = Math.Max(size.Width, size.Height);
+            float scale = maxDim > 0 ? 96f / maxDim : 1f;
+            int width = Math.Max(1, (int)(size.Width * scale));
+            int height = Math.Max(1, (int)(size.Height * scale));
+
+            using var bitmap = new SKBitmap(width, height);
+            using var canvas = new SKCanvas(bitmap);
+            canvas.Clear(SKColors.Transparent);
+            canvas.Scale(scale);
+            canvas.DrawPicture(svg.Picture);
+
+            using var image = SKImage.FromBitmap(bitmap);
+            return image.Encode(SKEncodedImageFormat.Png, 100).ToArray();
+        }
+        catch
+        {
             return null;
-
-        var size = svg.Picture.CullRect;
-        float maxDim = Math.Max(size.Width, size.Height);
-        float scale = maxDim > 0 ? 96f / maxDim : 1f;
-
-        var bitmap = new SKBitmap(
-            (int)(size.Width * scale),
-            (int)(size.Height * scale));
-        using var canvas = new SKCanvas(bitmap);
-        canvas.Clear(SKColors.Transparent);
-        canvas.Scale(scale);
-        canvas.DrawPicture(svg.Picture);
-
-        using var image = SKImage.FromBitmap(bitmap);
-        return image.Encode(SKEncodedImageFormat.Png, 100).ToArray();
+        }
     }
 
     public List<Stratagem> GetByCategory(string category)

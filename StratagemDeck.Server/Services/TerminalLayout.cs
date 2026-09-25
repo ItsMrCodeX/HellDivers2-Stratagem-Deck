@@ -16,11 +16,15 @@ public record LogEntry(string Message, LogCategory Category, DateTime Timestamp)
 
 public class TerminalLayout : IDisposable
 {
+    private const int MaxLogHistory = 1000;
+
     private int _leftWidth;
     private int _sepCol;
     private int _rightWidth;
     private int _height;
     private int _logAreaHeight;
+    private int _lastWidth;
+    private int _lastHeight;
 
     private readonly List<LogEntry> _logHistory = [];
     private readonly ConcurrentQueue<LogEntry> _pendingLogs = new();
@@ -70,6 +74,9 @@ public class TerminalLayout : IDisposable
         Console.Clear();
         Console.CursorVisible = false;
 
+        _lastWidth = Console.WindowWidth;
+        _lastHeight = Console.WindowHeight;
+
         DrawSeparator();
         RenderLeftPane();
     }
@@ -94,6 +101,17 @@ public class TerminalLayout : IDisposable
         _running = true;
         while (_running)
         {
+            if (Console.WindowWidth != _lastWidth || Console.WindowHeight != _lastHeight)
+            {
+                RecalcDimensions();
+                _lastWidth = Console.WindowWidth;
+                _lastHeight = Console.WindowHeight;
+                Console.Clear();
+                DrawSeparator();
+                RenderLeftPane();
+                RenderRightPane();
+            }
+
             ProcessPendingLogs();
 
             if (Console.KeyAvailable)
@@ -117,6 +135,12 @@ public class TerminalLayout : IDisposable
         {
             _logHistory.Add(entry);
             hasNew = true;
+        }
+
+        if (_logHistory.Count > MaxLogHistory)
+        {
+            _logHistory.RemoveRange(0, _logHistory.Count - MaxLogHistory);
+            _scrollOffset = Math.Min(_scrollOffset, Math.Max(0, _logHistory.Count - _logAreaHeight));
         }
 
         if (hasNew && _scrollOffset == 0)

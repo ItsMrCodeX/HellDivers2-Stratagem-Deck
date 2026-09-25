@@ -29,15 +29,6 @@ public class DiscoveryMessage
     public string Pin { get; set; } = string.Empty;
 }
 
-public class PingMessage
-{
-    [JsonPropertyName("type")]
-    public string Type { get; set; } = "ping";
-
-    [JsonPropertyName("pin")]
-    public string Pin { get; set; } = string.Empty;
-}
-
 public class PongMessage
 {
     [JsonPropertyName("type")]

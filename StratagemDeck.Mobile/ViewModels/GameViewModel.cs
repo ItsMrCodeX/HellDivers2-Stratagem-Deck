@@ -58,7 +58,7 @@ public class GameViewModel : INotifyPropertyChanged
         _sender = sender;
 
         TapSlotCommand = new Command<string>(async (idx) => await OnTapSlot(idx));
-        SendMissionStratagemCommand = new Command<Stratagem>(async (s) => await SendStratagem(s));
+        SendMissionStratagemCommand = new Command<Stratagem>(async (s) => await OnSendMission(s));
         _session.OnConnectedChanged += () =>
         {
             OnPropertyChanged(nameof(IsConnected));
@@ -83,6 +83,17 @@ public class GameViewModel : INotifyPropertyChanged
         var slot = Slots.FirstOrDefault(s => s.SlotIndex == idx);
         if (slot?.SelectedStratagem == null) return;
 
+        await SendStratagem(slot.SelectedStratagem);
+    }
+
+    private async Task OnSendMission(Stratagem strat)
+    {
+        if (_isSending) return;
+        await SendStratagem(strat);
+    }
+
+    private async Task SendStratagem(Stratagem strat)
+    {
         if (!_session.IsConnected || string.IsNullOrEmpty(_session.ServerIp))
         {
             Status = "Not connected";
@@ -90,25 +101,23 @@ public class GameViewModel : INotifyPropertyChanged
         }
 
         _isSending = true;
-
         try
         {
-            var strat = slot.SelectedStratagem;
-            await SendStratagem(strat);
+            Status = $"{strat.DisplayName}";
+            await _sender.SendAsync(_session.ServerIp, _session.Pin, strat);
+            Status = "Sent";
+            await Task.Delay(1000);
+            Status = "Connected";
+        }
+        catch (Exception ex)
+        {
+            Status = "Send failed";
+            System.Diagnostics.Debug.WriteLine($"Send failed: {ex}");
         }
         finally
         {
             _isSending = false;
         }
-    }
-
-    private async Task SendStratagem(Stratagem strat)
-    {
-        Status = $"{strat.DisplayName}";
-        await _sender.SendAsync(_session.ServerIp, _session.Pin, strat);
-        Status = "Sent";
-        await Task.Delay(1000);
-        Status = "Connected";
     }
 
     public void UpdateConnectionStatus()

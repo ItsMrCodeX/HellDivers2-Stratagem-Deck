@@ -8,6 +8,7 @@ public class SessionService
     private readonly StratagemDataService _dataService;
     private readonly PreferencesService _prefs;
     private readonly UdpDiscoveryService _discovery;
+    private readonly SemaphoreSlim _initGate = new(1, 1);
 
     public ObservableCollection<LoadoutSlot> Slots { get; } = new();
     public ObservableCollection<string> Categories { get; } = new();
@@ -36,33 +37,43 @@ public class SessionService
     {
         if (IsDataLoaded) return;
 
-        await _dataService.LoadAsync();
-
-        Categories.Clear();
-        foreach (var cat in _dataService.Categories)
-            Categories.Add(cat);
-
-        var allStrats = _dataService.Categories.SelectMany(c => _dataService.GetByCategory(c));
-        Slots.Clear();
-        var saved = _prefs.LoadLoadout(allStrats);
-        foreach (var slot in saved)
-            Slots.Add(slot);
-
-        var savedIp = _prefs.GetLastServerIp();
-        var savedPin = _prefs.GetLastPairedPin();
-        if (savedIp != null && savedPin != null)
+        await _initGate.WaitAsync();
+        try
         {
-            ServerIp = savedIp;
-            Pin = savedPin;
-            var ok = await _discovery.PingServer(savedIp, savedPin);
-            IsConnected = ok;
-            ServerName = ok ? savedIp : string.Empty;
-            if (ok)
-                _discovery.StopScanning();
-        }
+            if (IsDataLoaded) return;
 
-        IsDataLoaded = true;
-        OnDataLoaded?.Invoke();
+            await _dataService.LoadAsync();
+
+            Categories.Clear();
+            foreach (var cat in _dataService.Categories)
+                Categories.Add(cat);
+
+            var allStrats = _dataService.Categories.SelectMany(c => _dataService.GetByCategory(c));
+            Slots.Clear();
+            var saved = _prefs.LoadLoadout(allStrats);
+            foreach (var slot in saved)
+                Slots.Add(slot);
+
+            var savedIp = _prefs.GetLastServerIp();
+            var savedPin = _prefs.GetLastPairedPin();
+            if (savedIp != null && savedPin != null)
+            {
+                ServerIp = savedIp;
+                Pin = savedPin;
+                var ok = await _discovery.PingServer(savedIp, savedPin);
+                IsConnected = ok;
+                ServerName = ok ? savedIp : string.Empty;
+                if (ok)
+                    _discovery.StopScanning();
+            }
+
+            IsDataLoaded = true;
+            OnDataLoaded?.Invoke();
+        }
+        finally
+        {
+            _initGate.Release();
+        }
     }
 
     public void SaveLoadout()

@@ -13,11 +13,16 @@ public class PreferencesService
 
     public void SaveLoadout(List<LoadoutSlot> slots)
     {
-        lock (_lock) { _pendingSlots = slots; }
+        CancellationTokenSource cts;
+        lock (_lock)
+        {
+            _pendingSlots = slots;
+            _debounceCts?.Cancel();
+            _debounceCts?.Dispose();
+            _debounceCts = cts = new CancellationTokenSource();
+        }
 
-        _debounceCts?.Cancel();
-        _debounceCts = new CancellationTokenSource();
-        var token = _debounceCts.Token;
+        var token = cts.Token;
 
         _ = Task.Run(async () =>
         {
@@ -29,7 +34,8 @@ public class PreferencesService
                 List<LoadoutSlot> toSave;
                 lock (_lock)
                 {
-                    toSave = _pendingSlots!;
+                    if (_pendingSlots == null) return;
+                    toSave = _pendingSlots;
                     _pendingSlots = null;
                 }
 
@@ -48,8 +54,12 @@ public class PreferencesService
                 var json = JsonSerializer.Serialize(data);
                 Preferences.Default.Set(LoadoutKey, json);
             }
-            catch (TaskCanceledException) { }
-        }, token);
+            catch (OperationCanceledException) { }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"SaveLoadout failed: {ex}");
+            }
+        });
     }
 
     public List<LoadoutSlot> LoadLoadout(IEnumerable<Stratagem> allStrats)

@@ -38,8 +38,11 @@ public class UdpDiscoveryService : IDisposable
         _cts?.Cancel();
     }
 
-    public async Task<bool> PingServer(string ip, string pin)
+    public async Task<bool> PingServer(string ip, string pin, int timeoutMs = 1000)
     {
+        using var cts = new CancellationTokenSource();
+        cts.CancelAfter(timeoutMs);
+
         try
         {
             var ping = new { type = "ping", pin };
@@ -47,19 +50,23 @@ public class UdpDiscoveryService : IDisposable
             var data = Encoding.UTF8.GetBytes(json);
 
             using var client = new UdpClient();
-            client.Client.ReceiveTimeout = 1000;
-            await client.SendAsync(data, new IPEndPoint(IPAddress.Parse(ip), _cmdPort));
+            await client.SendAsync(data, new IPEndPoint(IPAddress.Parse(ip), _cmdPort), cts.Token);
 
-            var result = await client.ReceiveAsync();
+            var result = await client.ReceiveAsync(cts.Token);
             var response = Encoding.UTF8.GetString(result.Buffer);
 
             var ok = response.Contains("\"type\":\"pong\"");
             OnLog?.Invoke(ok ? "Connected" : "Invalid response");
             return ok;
         }
+        catch (OperationCanceledException)
+        {
+            OnLog?.Invoke("Ping timed out");
+            return false;
+        }
         catch (Exception ex)
         {
-            OnLog?.Invoke("Ping failed");
+            OnLog?.Invoke($"Ping failed: {ex.Message}");
             return false;
         }
     }
@@ -150,7 +157,7 @@ public class UdpDiscoveryService : IDisposable
                 }
                 catch (OperationCanceledException) { break; }
                 catch (SocketException) { }
-                catch { }
+                catch (Exception ex) { OnLog?.Invoke($"Scan error: {ex.Message}"); }
             }
 
             OnLog?.Invoke(_responseCount > 0 ? $"{_responseCount} server(s) found" : "No servers found");

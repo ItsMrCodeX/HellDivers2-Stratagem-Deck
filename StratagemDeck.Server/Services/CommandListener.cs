@@ -42,27 +42,42 @@ public class CommandListener : IDisposable
                 var result = await _udp.ReceiveAsync(ct);
                 var json = Encoding.UTF8.GetString(result.Buffer);
 
-                if (json.Contains("\"type\":\"ping\""))
+                StratagemCommand? cmd;
+                try
                 {
-                    await HandlePing(result.RemoteEndPoint, json);
+                    cmd = JsonSerializer.Deserialize<StratagemCommand>(json);
+                }
+                catch (JsonException)
+                {
+                    OnStatusChanged?.Invoke(LogCategory.Error, $"Malformed message from {result.RemoteEndPoint.Address}");
                     continue;
                 }
 
-                if (json.Contains("\"type\":\"discover\""))
-                {
-                    await HandleDiscover(result.RemoteEndPoint);
+                if (cmd == null || string.IsNullOrEmpty(cmd.Type))
                     continue;
-                }
 
-                if (json.Contains("\"type\":\"stratagem\""))
+                switch (cmd.Type)
                 {
-                    var cmd = JsonSerializer.Deserialize<StratagemCommand>(json);
-                    if (cmd != null)
+                    case "ping":
+                        await HandlePing(result.RemoteEndPoint, cmd);
+                        break;
+                    case "discover":
+                        await HandleDiscover(result.RemoteEndPoint);
+                        break;
+                    case "stratagem":
                         await HandleStratagem(result.RemoteEndPoint, cmd);
+                        break;
+                    default:
+                        OnStatusChanged?.Invoke(LogCategory.Error, $"Unknown message type '{cmd.Type}' from {result.RemoteEndPoint.Address}");
+                        break;
                 }
             }
             catch (OperationCanceledException) { break; }
-            catch { }
+            catch (ObjectDisposedException) { break; }
+            catch (Exception ex)
+            {
+                OnStatusChanged?.Invoke(LogCategory.Error, $"Listener error: {ex.Message}");
+            }
         }
     }
 
@@ -81,10 +96,9 @@ public class CommandListener : IDisposable
         OnStatusChanged?.Invoke(LogCategory.Network, $"Discovery response sent to {sender.Address}");
     }
 
-    private async Task HandlePing(IPEndPoint sender, string json)
+    private async Task HandlePing(IPEndPoint sender, StratagemCommand ping)
     {
-        var ping = JsonSerializer.Deserialize<PingMessage>(json);
-        if (ping == null || !_pinManager.Validate(ping.Pin))
+        if (!_pinManager.Validate(ping.Pin))
         {
             OnStatusChanged?.Invoke(LogCategory.Error, $"Invalid ping from {sender.Address}");
             return;
