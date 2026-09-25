@@ -211,6 +211,10 @@
     "Eagle 500kg Bomb": {
       "keys": "up right down down down",
       "shortName": "Eagle 500kg Bomb"
+    },
+    "Eagle Gas Airstrike": {
+      "keys": "up right left right",
+      "shortName": "Eagle Gas Airstrike"
     }
   },
   "Defensive": {
@@ -373,6 +377,10 @@
     "M-104 Incinerator FRV": {
       "keys": "left down right left down up up",
       "shortName": "Incinerator FRV"
+    },
+    "TD-110 Maelstrom": {
+      "keys": "left down right down left down up left right",
+      "shortName": "Maelstrom"
     }
   },
   "Mission": {
@@ -451,6 +459,14 @@
     "Aquifer Drill": {
       "keys": "left left left up down right down down",
       "shortName": "Aquifer Drill"
+    },
+    "Portable Comms Relay": {
+      "keys": "up up down down left left down",
+      "shortName": "Portable Comms Relay"
+    },
+    "Activate E-711 Extraction Drill": {
+      "keys": "down down left left down down",
+      "shortName": "E-711 Extraction Drill"
     },
     "Orbital Illumination Flare": {
       "keys": "right right left left",

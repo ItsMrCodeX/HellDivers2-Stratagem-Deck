@@ -1,18 +1,15 @@
 <svg viewBox="0 0 256 256" xmlns="http://www.w3.org/2000/svg" xml:space="preserve" style="fill-rule:evenodd;clip-rule:evenodd;stroke-linejoin:round;stroke-miterlimit:2">
   <desc>Traced by Dogo314</desc>
-  <g transform="translate(-276 -306)">
-    <path style="fill:none" d="M276 306h256v256H276z"/>
+  <g transform="translate(-28.444 589.487)scale(.98084)">
+    <path style="fill:none" d="M29-601h261v261H29z"/>
     <clipPath id="a">
-      <path d="M276 306h256v256H276z"/>
+      <path d="M29-601h261v261H29z"/>
     </clipPath>
     <g clip-path="url(#a)">
-      <path style="fill:#011419" transform="translate(0 306)" d="M276 0h256v256H276z"/>
-      <path d="M360 372h80l-12 12H328l20-20zm-32 28h48l-12 12h-28zm32-36 20-20h12l-16 16h-24l8-4z" style="fill:#53bcda" transform="translate(-0 0)"/>
-      <path d="M316 420h128a28 28 0 0 1 28 28v48a28 28 0 0 1-28 28H316a28 28 0 0 1-28-28v-48a28 28 0 0 1 28-28zm12 20a16 16 0 0 0-16 16v40a16 16 0 0 0 16 16h104a16 16 0 0 0 16-16v-40a16 16 0 0 0-16-16H328zm36 12h68a8 8 0 0 1 8 8v32a8 8 0 0 1-8 8h-68a8 8 0 0 1-8-8v-32a8 8 0 0 1 8-8z" style="fill:#ffffee"/>
-      <circle cx="380" cy="476" r="22" style="fill:#53bcda"/>
-      <circle cx="380" cy="476" r="10" style="fill:#ffffee"/>
-      <path d="M472 440h16l16 16v32l-16 16h-16l-12-12h-8l12 12v8l-12 12h16l16 16v24l-16 16v-56l-20-20v-16l20-20zm20 0 12-12h8l-12 12zm20 8 12 12v16l-12 12v-40zm-28 56 12 12-12 12v-24zm20 20v40l12 12h8l-12-12zm-8-44 12 12-12 12v-24z" style="fill:#ffffee" transform="translate(0 0)"/>
-      <path d="M276 15V0h256v15zM518 .82H290v13.36h228z" style="fill:#53bcda" transform="matrix(1 0 0 17.06667 0 306)"/>
+      <path style="fill:#363426" transform="translate(-252.39 -601)scale(1.01953)" d="M276 0h256v256H276z"/>
+      <path d="M5844 148v-28l20-4v36zm-159-20v-22l8-2v-3h7V82h6v19h41l30 13v3h49l3 3v31h-7v21h-10v-21h-8l-13 26h-11l-3-3v-3l10-20h-10v3h-63l-21-10v-14zm115-18c-3.311 0-6-2.689-6-6s2.689-6 6-6h34c3.311 0 6 2.689 6 6s-2.689 6-6 6zm40 15v18h-7v-18z" style="fill:#ffe" transform="translate(-5729.313 -601)scale(1.01953)"/>
+      <path d="M508 232h-32l32-32zm-208 0v-32l32 32zM508 24v32l-32-32zm-208 0h32l-32 32z" style="fill:#c9b269" transform="translate(-252.39 -601)scale(1.01953)"/>
+      <path d="M276 15V0h256v15zM518 .82H290v13.36h228z" style="fill:#c9b269" transform="matrix(1.01953 0 0 17.4 -252.39 -601)"/>
     </g>
   </g>
 </svg>
