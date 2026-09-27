@@ -20,6 +20,17 @@ public partial class SetupPage : ContentPage
         catch (Exception ex) { System.Diagnostics.Debug.WriteLine(ex); }
     }
 
+    protected override bool OnBackButtonPressed()
+    {
+        if (_vm.IsSearchOpen)
+        {
+            _vm.CloseSearchCommand.Execute(null);
+            return true;
+        }
+
+        return base.OnBackButtonPressed();
+    }
+
     private void OnSearchCompleted()
     {
         DismissKeyboard();

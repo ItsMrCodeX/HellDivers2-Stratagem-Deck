@@ -2,6 +2,24 @@
 
 All notable changes to this project will be documented in this file.
 
+## [Unreleased]
+
+### Added
+
+- **Custom search keyboard** for the Setup page: full-screen overlay with results on top (1/4) and an in-app QWERTY keyboard at the bottom (3/4)
+- **A-Z sidebar filter** in the custom keyboard: filters stratagems by starting letter, combined with live typing
+- **Search Keyboard setting** in Settings (`use_custom_keyboard`, custom by default) to switch between the custom keyboard and the system keyboard
+- `StratagemDataService.GetAll()` / `SessionService.GetAll()` for full-list searches
+
+### Changed
+
+- **Icon loading moved to Setup start**: categories are now loaded one by one (sequentially) instead of decoding every icon at app startup; decoded PNGs stay cached in `AppDataDirectory/icon_cache` and are reused across launches (cache is only removed when the app is uninstalled or its data is cleared)
+- `Stratagem.IconSource` now raises `PropertyChanged`, so icons that finish loading after binding appear in grids, slots and the custom keyboard results
+
+### Fixed
+
+- Icon cache writes are now atomic (temp file + move) and validated before reuse, so a partial/corrupt PNG is re-decoded instead of rendering a broken icon
+
 ## [Released 1.2.2] 
 
 ### Added

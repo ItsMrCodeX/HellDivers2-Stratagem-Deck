@@ -9,6 +9,8 @@ public class SessionService
     private readonly PreferencesService _prefs;
     private readonly UdpDiscoveryService _discovery;
     private readonly SemaphoreSlim _initGate = new(1, 1);
+    private readonly SemaphoreSlim _iconsGate = new(1, 1);
+    private bool _iconsLoaded;
 
     public ObservableCollection<LoadoutSlot> Slots { get; } = new();
     public ObservableCollection<string> Categories { get; } = new();
@@ -22,6 +24,7 @@ public class SessionService
     public event Action? OnDataLoaded;
     public event Action? OnConnectedChanged;
     public event Action? OnLoadoutChanged;
+    public event Action? OnIconsLoaded;
 
     public SessionService(
         StratagemDataService dataService,
@@ -76,6 +79,34 @@ public class SessionService
         }
     }
 
+    public async Task EnsureIconsLoadedAsync()
+    {
+        if (_iconsLoaded) return;
+
+        await _iconsGate.WaitAsync();
+        try
+        {
+            if (_iconsLoaded) return;
+
+            await _dataService.LoadIconsAsync();
+            _iconsLoaded = true;
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Icon load failed: {ex}");
+            return;
+        }
+        finally
+        {
+            _iconsGate.Release();
+        }
+
+        if (MainThread.IsMainThread)
+            OnIconsLoaded?.Invoke();
+        else
+            MainThread.BeginInvokeOnMainThread(() => OnIconsLoaded?.Invoke());
+    }
+
     public void SaveLoadout()
     {
         _prefs.SaveLoadout(Slots.ToList());
@@ -98,6 +129,9 @@ public class SessionService
         }
         return ok;
     }
+
+    public List<Stratagem> GetAll()
+        => _dataService.GetAll();
 
     public List<Stratagem> GetByCategory(string category)
         => _dataService.GetByCategory(category);

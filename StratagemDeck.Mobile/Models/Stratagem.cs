@@ -1,10 +1,15 @@
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.Text.Json.Serialization;
 
 namespace StratagemDeck.Mobile.Models;
 
-public class Stratagem
+public class Stratagem : INotifyPropertyChanged
 {
+    private ImageSource? _iconSource;
+
+    public event PropertyChangedEventHandler? PropertyChanged;
+
     [JsonPropertyName("name")]
     public string Name { get; set; } = string.Empty;
 
@@ -21,7 +26,16 @@ public class Stratagem
     public string DisplayName => ShortName ?? Name;
 
     [JsonIgnore]
-    public ImageSource? IconSource { get; set; }
+    public ImageSource? IconSource
+    {
+        get => _iconSource;
+        set
+        {
+            if (ReferenceEquals(_iconSource, value)) return;
+            _iconSource = value;
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(IconSource)));
+        }
+    }
 
     public string GetNormalizedFileName()
     {

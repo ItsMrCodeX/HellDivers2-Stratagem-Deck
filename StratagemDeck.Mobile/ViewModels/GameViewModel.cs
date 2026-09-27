@@ -67,12 +67,17 @@ public class GameViewModel : INotifyPropertyChanged
         {
             NotifySlotsChanged();
         };
+        _session.OnIconsLoaded += () =>
+        {
+            NotifySlotsChanged();
+        };
     }
 
     public async Task InitializeAsync()
     {
         await _session.InitializeAsync();
         Status = _session.IsConnected ? "Connected" : "Not connected";
+        _ = _session.EnsureIconsLoadedAsync();
     }
 
     private async Task OnTapSlot(string? indexStr)

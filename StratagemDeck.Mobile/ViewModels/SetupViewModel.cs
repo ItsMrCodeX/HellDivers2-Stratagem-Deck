@@ -9,17 +9,23 @@ namespace StratagemDeck.Mobile.ViewModels;
 
 public class SetupViewModel : INotifyPropertyChanged
 {
+    private const string AllLetters = "ALL";
+
     private readonly SessionService _session;
+    private readonly PreferencesService _prefs;
 
     private LoadoutSlot? _selectedSlot;
     private string _status = string.Empty;
     private string _searchQuery = string.Empty;
     private string? _selectedCategory;
+    private string _searchLetter = AllLetters;
+    private bool _isSearchOpen;
+    private bool _useCustomKeyboard = true;
 
     public event PropertyChangedEventHandler? PropertyChanged;
     public event Action? SearchCompleted;
 
-    public ObservableCollection<Stratagem> AvailableStrats { get; } = new();
+    public RangeObservableCollection<Stratagem> AvailableStrats { get; } = new();
 
     public ICommand SelectSlotCommand { get; }
     public ICommand SelectCategoryCommand { get; }
@@ -28,6 +34,8 @@ public class SetupViewModel : INotifyPropertyChanged
     public ICommand ClearLoadoutCommand { get; }
     public ICommand RemoveMissionStratagemCommand { get; }
     public ICommand SearchCommand { get; }
+    public ICommand OpenSearchCommand { get; }
+    public ICommand CloseSearchCommand { get; }
 
     public string SearchQuery
     {
@@ -43,6 +51,49 @@ public class SetupViewModel : INotifyPropertyChanged
         }
     }
 
+    public string SearchLetter
+    {
+        get => _searchLetter;
+        set
+        {
+            var letter = string.IsNullOrWhiteSpace(value) ? AllLetters : value;
+            if (_searchLetter != letter)
+            {
+                _searchLetter = letter;
+                OnPropertyChanged();
+                RefreshFilter();
+            }
+        }
+    }
+
+    public bool IsSearchOpen
+    {
+        get => _isSearchOpen;
+        private set
+        {
+            if (_isSearchOpen == value) return;
+            _isSearchOpen = value;
+            OnPropertyChanged();
+            OnPropertyChanged(nameof(IsTabBarVisible));
+            OnPropertyChanged(nameof(IsPageContentVisible));
+        }
+    }
+
+    public bool IsTabBarVisible => !IsSearchOpen;
+
+    public bool IsPageContentVisible => !IsSearchOpen;
+
+    public bool UseCustomKeyboard
+    {
+        get => _useCustomKeyboard;
+        private set
+        {
+            if (_useCustomKeyboard == value) return;
+            _useCustomKeyboard = value;
+            OnPropertyChanged();
+        }
+    }
+
     public LoadoutSlot? SelectedSlot
     {
         get => _selectedSlot;
@@ -51,11 +102,19 @@ public class SetupViewModel : INotifyPropertyChanged
             _selectedSlot = value;
             OnPropertyChanged();
             OnPropertyChanged(nameof(SelectedSlotIndex));
+            OnPropertyChanged(nameof(TargetLabel));
         }
     }
 
     public int SelectedSlotIndex => SelectedSlot?.SlotIndex ?? -1;
     public bool IsMissionSlotSelected => SelectedSlotIndex == 4;
+
+    public string TargetLabel => SelectedSlot switch
+    {
+        null => "Pick a slot first",
+        { SlotIndex: 4 } => "Mission",
+        var slot => $"Slot {slot.SlotIndex + 1}"
+    };
 
     public string Status
     {
@@ -89,28 +148,66 @@ public class SetupViewModel : INotifyPropertyChanged
         OnPropertyChanged(nameof(MissionStrats));
     }
 
-    public SetupViewModel(SessionService session)
+    public SetupViewModel(SessionService session, PreferencesService prefs)
     {
         _session = session;
+        _prefs = prefs;
 
         SelectSlotCommand = new Command<string>(OnSelectSlot);
         SelectCategoryCommand = new Command<string>(OnSelectCategory);
-        TapStratagemCommand = new Command<Stratagem>(s =>
-        {
-            if (IsMissionSlotSelected)
-                AddToMission(s);
-            else
-                AssignToSlot(s);
-        });
+        TapStratagemCommand = new Command<Stratagem>(OnTapStratagem);
         SaveLoadoutCommand = new Command(OnSaveLoadout);
         ClearLoadoutCommand = new Command(OnClearLoadout);
         RemoveMissionStratagemCommand = new Command<Stratagem>(s => RemoveFromMission(s));
         SearchCommand = new Command(OnSearch);
+        OpenSearchCommand = new Command(OnOpenSearch);
+        CloseSearchCommand = new Command(OnCloseSearch);
+
+        _session.OnIconsLoaded += NotifySlotsChanged;
     }
 
     public async Task InitializeAsync()
     {
+        UseCustomKeyboard = _prefs.GetUseCustomKeyboard();
+        if (IsSearchOpen && !UseCustomKeyboard)
+            OnCloseSearch();
+
         await _session.InitializeAsync();
+        await _session.EnsureIconsLoadedAsync();
+    }
+
+    private void OnTapStratagem(Stratagem stratagem)
+    {
+        if (SelectedSlot == null)
+        {
+            Status = "Pick a slot first";
+            return;
+        }
+
+        if (IsMissionSlotSelected)
+            AddToMission(stratagem);
+        else
+            AssignToSlot(stratagem);
+
+        if (IsSearchOpen)
+            OnCloseSearch();
+    }
+
+    private void OnOpenSearch()
+    {
+        if (!UseCustomKeyboard)
+            return;
+
+        SearchQuery = string.Empty;
+        SearchLetter = AllLetters;
+        IsSearchOpen = true;
+    }
+
+    private void OnCloseSearch()
+    {
+        SearchQuery = string.Empty;
+        SearchLetter = AllLetters;
+        IsSearchOpen = false;
     }
 
     private void OnSelectSlot(string? indexStr)
@@ -144,18 +241,38 @@ public class SetupViewModel : INotifyPropertyChanged
 
     private void RefreshFilter()
     {
-        AvailableStrats.Clear();
+        var query = SearchQuery.Trim();
+        var hasQuery = query.Length > 0;
+        var hasLetter = !string.Equals(SearchLetter, AllLetters, StringComparison.OrdinalIgnoreCase);
 
         IEnumerable<Stratagem> source;
-        if (!string.IsNullOrWhiteSpace(SearchQuery))
-            source = _session.Search(SearchQuery);
-        else if (_selectedCategory != null)
-            source = _session.GetByCategory(_selectedCategory);
-        else
-            return;
+        if (hasQuery || hasLetter)
+        {
+            source = _session.GetAll();
 
-        foreach (var s in source)
-            AvailableStrats.Add(s);
+            if (hasLetter)
+                source = source.Where(s => StartsWithLetter(s, SearchLetter));
+
+            if (hasQuery)
+                source = source.Where(s =>
+                    s.Name.Contains(query, StringComparison.OrdinalIgnoreCase)
+                    || s.DisplayName.Contains(query, StringComparison.OrdinalIgnoreCase));
+        }
+        else if (_selectedCategory != null)
+        {
+            source = _session.GetByCategory(_selectedCategory);
+        }
+        else
+        {
+            source = Enumerable.Empty<Stratagem>();
+        }
+
+        AvailableStrats.ReplaceAll(source);
+    }
+
+    private static bool StartsWithLetter(Stratagem stratagem, string letter)
+    {
+        return stratagem.DisplayName.StartsWith(letter, StringComparison.OrdinalIgnoreCase);
     }
 
     private void AssignToSlot(Stratagem stratagem)

@@ -4,20 +4,26 @@
              xmlns:vm="clr-namespace:StratagemDeck.Mobile.ViewModels"
              xmlns:models="clr-namespace:StratagemDeck.Mobile.Models"
              xmlns:conv="clr-namespace:StratagemDeck.Mobile.Converters"
+             xmlns:controls="clr-namespace:StratagemDeck.Mobile.Controls"
              x:Class="StratagemDeck.Mobile.Pages.SetupPage"
              x:DataType="vm:SetupViewModel"
              Title="Setup"
              Shell.NavBarIsVisible="False"
+             Shell.TabBarIsVisible="{Binding IsTabBarVisible}"
              BackgroundColor="{StaticResource Canvas}">
 
     <ContentPage.Resources>
         <ResourceDictionary>
             <conv:CategoryToColorConverter x:Key="CategoryToColor" />
             <conv:SlotSelectedConverter x:Key="SlotSelected" />
+            <conv:InverseBoolConverter x:Key="InverseBool" />
         </ResourceDictionary>
     </ContentPage.Resources>
 
-    <ScrollView Orientation="Vertical" VerticalScrollBarVisibility="Always">
+    <Grid>
+
+    <ScrollView Orientation="Vertical" VerticalScrollBarVisibility="Always"
+                IsVisible="{Binding IsPageContentVisible}">
         <VerticalStackLayout Spacing="6" Padding="6" MinimumWidthRequest="360">
 
             <Label Text="{Binding Status}" TextColor="{StaticResource Body}" FontSize="11" HorizontalOptions="Center" />
@@ -140,8 +146,28 @@
             </Border>
 
             <!-- Search -->
+            <Border IsVisible="{Binding UseCustomKeyboard}"
+                    BackgroundColor="{StaticResource Surface}"
+                    Stroke="{StaticResource Hairline}"
+                    StrokeShape="RoundRectangle 8"
+                    Padding="12,0"
+                    HeightRequest="40"
+                    AutomationProperties.Name="Search for a stratagem">
+                <Border.GestureRecognizers>
+                    <TapGestureRecognizer Command="{Binding OpenSearchCommand}" />
+                </Border.GestureRecognizers>
+                <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                    <Label Text="Search for a stratagem..." FontSize="12"
+                           TextColor="{StaticResource Mute}" VerticalOptions="Center"
+                           LineBreakMode="TailTruncation" />
+                    <Label Grid.Column="1" Text="A-Z" FontSize="11" FontAttributes="Bold"
+                           TextColor="{StaticResource AccentActive}" VerticalOptions="Center" />
+                </Grid>
+            </Border>
+
             <SearchBar x:Name="StrSearchBar" Placeholder="Search for a stratagem..." Text="{Binding SearchQuery}"
                        SearchCommand="{Binding SearchCommand}"
+                       IsVisible="{Binding UseCustomKeyboard, Converter={StaticResource InverseBool}}"
                        BackgroundColor="{StaticResource Surface}"
                        TextColor="{StaticResource OnCanvas}"
                        PlaceholderColor="{StaticResource Mute}"
@@ -192,4 +218,14 @@
 
         </VerticalStackLayout>
     </ScrollView>
+
+        <controls:StratagemKeyboardView IsVisible="{Binding IsSearchOpen}"
+                                        QueryText="{Binding SearchQuery, Mode=TwoWay}"
+                                        SelectedLetter="{Binding SearchLetter, Mode=TwoWay}"
+                                        Results="{Binding AvailableStrats}"
+                                        TargetLabel="{Binding TargetLabel}"
+                                        ResultTappedCommand="{Binding TapStratagemCommand}"
+                                        CloseCommand="{Binding CloseSearchCommand}" />
+
+    </Grid>
 </ContentPage>

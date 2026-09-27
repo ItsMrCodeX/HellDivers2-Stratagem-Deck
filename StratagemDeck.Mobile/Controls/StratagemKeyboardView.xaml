@@ -1,0 +1,244 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentView xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:controls="clr-namespace:StratagemDeck.Mobile.Controls"
+             xmlns:models="clr-namespace:StratagemDeck.Mobile.Models"
+             xmlns:conv="clr-namespace:StratagemDeck.Mobile.Converters"
+             x:Class="StratagemDeck.Mobile.Controls.StratagemKeyboardView"
+             x:Name="Root"
+             x:DataType="controls:StratagemKeyboardView"
+             BackgroundColor="{StaticResource Canvas}">
+
+    <ContentView.Resources>
+        <ResourceDictionary>
+            <conv:InverseBoolConverter x:Key="InverseBool" />
+
+            <Style x:Key="KeyboardKey" TargetType="Button">
+                <Setter Property="BackgroundColor" Value="{StaticResource SurfaceSoft}" />
+                <Setter Property="TextColor" Value="{StaticResource OnCanvas}" />
+                <Setter Property="FontFamily" Value="NunitoSemiBold" />
+                <Setter Property="FontSize" Value="16" />
+                <Setter Property="CornerRadius" Value="8" />
+                <Setter Property="Padding" Value="0" />
+                <Setter Property="MinimumHeightRequest" Value="0" />
+                <Setter Property="MinimumWidthRequest" Value="0" />
+            </Style>
+
+            <Style x:Key="KeyboardActionKey" TargetType="Button" BasedOn="{StaticResource KeyboardKey}">
+                <Setter Property="BackgroundColor" Value="{StaticResource HairlineStrong}" />
+                <Setter Property="FontSize" Value="13" />
+            </Style>
+        </ResourceDictionary>
+    </ContentView.Resources>
+
+    <Grid x:Name="RootGrid"
+          RowDefinitions="1*,3*"
+          ColumnDefinitions="Auto,*"
+          Padding="8"
+          RowSpacing="6"
+          ColumnSpacing="8"
+          BackgroundColor="{StaticResource Canvas}">
+        <Grid.GestureRecognizers>
+            <TapGestureRecognizer Command="{Binding AbsorbTapCommand}" />
+        </Grid.GestureRecognizers>
+
+        <!-- Results (top 1/4) -->
+        <Grid Grid.Row="0" Grid.ColumnSpan="2" RowDefinitions="Auto,*" RowSpacing="2">
+            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                <VerticalStackLayout Spacing="0" VerticalOptions="Center">
+                    <Label Text="{Binding TargetLabel}"
+                           FontSize="11"
+                           TextColor="{StaticResource AccentActive}"
+                           FontAttributes="Bold" />
+                    <Grid>
+                        <Label Text="{Binding QueryText}"
+                               FontSize="15"
+                               TextColor="{StaticResource OnCanvas}"
+                               LineBreakMode="TailTruncation"
+                               IsVisible="{Binding HasQuery}" />
+                        <Label Text="Search for a stratagem..."
+                               FontSize="15"
+                               TextColor="{StaticResource Mute}"
+                               LineBreakMode="TailTruncation"
+                               IsVisible="{Binding HasQuery, Converter={StaticResource InverseBool}}" />
+                    </Grid>
+                </VerticalStackLayout>
+                <Button Grid.Column="1"
+                        Text="✕"
+                        Style="{StaticResource KeyboardActionKey}"
+                        WidthRequest="48"
+                        HeightRequest="34"
+                        VerticalOptions="Center"
+                        Command="{Binding CloseCommand}"
+                        AutomationProperties.Name="Close search keyboard" />
+            </Grid>
+
+            <Grid Grid.Row="1">
+                <CollectionView ItemsSource="{Binding Results}"
+                                SelectionMode="None"
+                                HorizontalScrollBarVisibility="Never"
+                                VerticalScrollBarVisibility="Never">
+                    <CollectionView.ItemsLayout>
+                        <LinearItemsLayout Orientation="Horizontal" ItemSpacing="6" />
+                    </CollectionView.ItemsLayout>
+                    <CollectionView.ItemTemplate>
+                        <DataTemplate x:DataType="models:Stratagem">
+                            <Border BackgroundColor="{StaticResource Surface}"
+                                    Stroke="{StaticResource Hairline}"
+                                    StrokeThickness="1"
+                                    StrokeShape="RoundRectangle 8"
+                                    Padding="6,3"
+                                    MinimumWidthRequest="88"
+                                    AutomationProperties.Name="{Binding DisplayName}">
+                                <Border.GestureRecognizers>
+                                    <TapGestureRecognizer
+                                        Command="{Binding Source={RelativeSource AncestorType={x:Type controls:StratagemKeyboardView}}, Path=ResultTappedCommand}"
+                                        CommandParameter="{Binding .}" />
+                                </Border.GestureRecognizers>
+                                <VerticalStackLayout Spacing="1" VerticalOptions="Center" HorizontalOptions="Center">
+                                    <Image Source="{Binding IconSource}"
+                                           WidthRequest="26"
+                                           HeightRequest="26"
+                                           Aspect="AspectFit"
+                                           HorizontalOptions="Center" />
+                                    <Label Text="{Binding DisplayName}"
+                                           FontSize="9"
+                                           TextColor="{StaticResource OnCanvasMute}"
+                                           HorizontalOptions="Center"
+                                           HorizontalTextAlignment="Center"
+                                           LineBreakMode="TailTruncation"
+                                           MaxLines="1" />
+                                </VerticalStackLayout>
+                            </Border>
+                        </DataTemplate>
+                    </CollectionView.ItemTemplate>
+                </CollectionView>
+
+                <Label Text="{Binding EmptyHint}"
+                       IsVisible="{Binding ShowEmptyHint}"
+                       FontSize="12"
+                       TextColor="{StaticResource Mute}"
+                       HorizontalOptions="Center"
+                       VerticalOptions="Center" />
+            </Grid>
+        </Grid>
+
+        <!-- A-Z sidebar -->
+        <CollectionView Grid.Row="1" Grid.Column="0"
+                        WidthRequest="44"
+                        ItemsSource="{Binding Letters}"
+                        SelectedItem="{Binding SelectedLetter, Mode=TwoWay}"
+                        SelectionMode="Single"
+                        VerticalScrollBarVisibility="Never"
+                        HorizontalScrollBarVisibility="Never">
+            <CollectionView.ItemsLayout>
+                <LinearItemsLayout Orientation="Vertical" ItemSpacing="2" />
+            </CollectionView.ItemsLayout>
+            <CollectionView.ItemTemplate>
+                <DataTemplate x:DataType="x:String">
+                    <Border BackgroundColor="{StaticResource SurfaceSoft}"
+                            Stroke="Transparent"
+                            StrokeShape="RoundRectangle 6"
+                            HeightRequest="30"
+                            AutomationProperties.Name="{Binding ., StringFormat='Letter {0}'}">
+                        <VisualStateManager.VisualStateGroups>
+                            <VisualStateGroupList>
+                                <VisualStateGroup x:Name="CommonStates">
+                                    <VisualState x:Name="Normal" />
+                                    <VisualState x:Name="Selected">
+                                        <VisualState.Setters>
+                                            <Setter Property="BackgroundColor" Value="{StaticResource AccentActive}" />
+                                        </VisualState.Setters>
+                                    </VisualState>
+                                </VisualStateGroup>
+                            </VisualStateGroupList>
+                        </VisualStateManager.VisualStateGroups>
+                        <Label Text="{Binding .}"
+                               FontSize="12"
+                               TextColor="{StaticResource OnCanvas}"
+                               HorizontalOptions="Center"
+                               VerticalOptions="Center" />
+                    </Border>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+        </CollectionView>
+
+        <!-- QWERTY keyboard (bottom 3/4) -->
+        <Grid Grid.Row="1" Grid.Column="1"
+              RowDefinitions="*,*,*,*"
+              ColumnDefinitions="*,*,*,*,*,*,*,*,*,*,*,*,*,*,*,*,*,*,*,*"
+              RowSpacing="5"
+              ColumnSpacing="5">
+
+            <!-- Row 1: QWERTYUIOP -->
+            <Button Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2" Text="Q" Style="{StaticResource KeyboardKey}"
+                    Command="{Binding KeyTappedCommand}" CommandParameter="Q" VerticalOptions="Fill" HorizontalOptions="Fill" />
+            <Button Grid.Row="0" Grid.Column="2" Grid.ColumnSpan="2" Text="W" Style="{StaticResource KeyboardKey}"
+                    Command="{Binding KeyTappedCommand}" CommandParameter="W" VerticalOptions="Fill" HorizontalOptions="Fill" />
+            <Button Grid.Row="0" Grid.Column="4" Grid.ColumnSpan="2" Text="E" Style="{StaticResource KeyboardKey}"
+                    Command="{Binding KeyTappedCommand}" CommandParameter="E" VerticalOptions="Fill" HorizontalOptions="Fill" />
+            <Button Grid.Row="0" Grid.Column="6" Grid.ColumnSpan="2" Text="R" Style="{StaticResource KeyboardKey}"
+                    Command="{Binding KeyTappedCommand}" CommandParameter="R" VerticalOptions="Fill" HorizontalOptions="Fill" />
+            <Button Grid.Row="0" Grid.Column="8" Grid.ColumnSpan="2" Text="T" Style="{StaticResource KeyboardKey}"
+                    Command="{Binding KeyTappedCommand}" CommandParameter="T" VerticalOptions="Fill" HorizontalOptions="Fill" />
+            <Button Grid.Row="0" Grid.Column="10" Grid.ColumnSpan="2" Text="Y" Style="{StaticResource KeyboardKey}"
+                    Command="{Binding KeyTappedCommand}" CommandParameter="Y" VerticalOptions="Fill" HorizontalOptions="Fill" />
+            <Button Grid.Row="0" Grid.Column="12" Grid.ColumnSpan="2" Text="U" Style="{StaticResource KeyboardKey}"
+                    Command="{Binding KeyTappedCommand}" CommandParameter="U" VerticalOptions="Fill" HorizontalOptions="Fill" />
+            <Button Grid.Row="0" Grid.Column="14" Grid.ColumnSpan="2" Text="I" Style="{StaticResource KeyboardKey}"
+                    Command="{Binding KeyTappedCommand}" CommandParameter="I" VerticalOptions="Fill" HorizontalOptions="Fill" />
+            <Button Grid.Row="0" Grid.Column="16" Grid.ColumnSpan="2" Text="O" Style="{StaticResource KeyboardKey}"
+                    Command="{Binding KeyTappedCommand}" CommandParameter="O" VerticalOptions="Fill" HorizontalOptions="Fill" />
+            <Button Grid.Row="0" Grid.Column="18" Grid.ColumnSpan="2" Text="P" Style="{StaticResource KeyboardKey}"
+                    Command="{Binding KeyTappedCommand}" CommandParameter="P" VerticalOptions="Fill" HorizontalOptions="Fill" />
+
+            <!-- Row 2: ASDFGHJKL -->
+            <Button Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="2" Text="A" Style="{StaticResource KeyboardKey}"
+                    Command="{Binding KeyTappedCommand}" CommandParameter="A" VerticalOptions="Fill" HorizontalOptions="Fill" />
+            <Button Grid.Row="1" Grid.Column="3" Grid.ColumnSpan="2" Text="S" Style="{StaticResource KeyboardKey}"
+                    Command="{Binding KeyTappedCommand}" CommandParameter="S" VerticalOptions="Fill" HorizontalOptions="Fill" />
+            <Button Grid.Row="1" Grid.Column="5" Grid.ColumnSpan="2" Text="D" Style="{StaticResource KeyboardKey}"
+                    Command="{Binding KeyTappedCommand}" CommandParameter="D" VerticalOptions="Fill" HorizontalOptions="Fill" />
+            <Button Grid.Row="1" Grid.Column="7" Grid.ColumnSpan="2" Text="F" Style="{StaticResource KeyboardKey}"
+                    Command="{Binding KeyTappedCommand}" CommandParameter="F" VerticalOptions="Fill" HorizontalOptions="Fill" />
+            <Button Grid.Row="1" Grid.Column="9" Grid.ColumnSpan="2" Text="G" Style="{StaticResource KeyboardKey}"
+                    Command="{Binding KeyTappedCommand}" CommandParameter="G" VerticalOptions="Fill" HorizontalOptions="Fill" />
+            <Button Grid.Row="1" Grid.Column="11" Grid.ColumnSpan="2" Text="H" Style="{StaticResource KeyboardKey}"
+                    Command="{Binding KeyTappedCommand}" CommandParameter="H" VerticalOptions="Fill" HorizontalOptions="Fill" />
+            <Button Grid.Row="1" Grid.Column="13" Grid.ColumnSpan="2" Text="J" Style="{StaticResource KeyboardKey}"
+                    Command="{Binding KeyTappedCommand}" CommandParameter="J" VerticalOptions="Fill" HorizontalOptions="Fill" />
+            <Button Grid.Row="1" Grid.Column="15" Grid.ColumnSpan="2" Text="K" Style="{StaticResource KeyboardKey}"
+                    Command="{Binding KeyTappedCommand}" CommandParameter="K" VerticalOptions="Fill" HorizontalOptions="Fill" />
+            <Button Grid.Row="1" Grid.Column="17" Grid.ColumnSpan="2" Text="L" Style="{StaticResource KeyboardKey}"
+                    Command="{Binding KeyTappedCommand}" CommandParameter="L" VerticalOptions="Fill" HorizontalOptions="Fill" />
+
+            <!-- Row 3: backspace, ZXCVBNM, clear -->
+            <Button Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="3" Text="⌫" Style="{StaticResource KeyboardActionKey}"
+                    Command="{Binding KeyTappedCommand}" CommandParameter="BACK" VerticalOptions="Fill" HorizontalOptions="Fill"
+                    AutomationProperties.Name="Backspace" />
+            <Button Grid.Row="2" Grid.Column="3" Grid.ColumnSpan="2" Text="Z" Style="{StaticResource KeyboardKey}"
+                    Command="{Binding KeyTappedCommand}" CommandParameter="Z" VerticalOptions="Fill" HorizontalOptions="Fill" />
+            <Button Grid.Row="2" Grid.Column="5" Grid.ColumnSpan="2" Text="X" Style="{StaticResource KeyboardKey}"
+                    Command="{Binding KeyTappedCommand}" CommandParameter="X" VerticalOptions="Fill" HorizontalOptions="Fill" />
+            <Button Grid.Row="2" Grid.Column="7" Grid.ColumnSpan="2" Text="C" Style="{StaticResource KeyboardKey}"
+                    Command="{Binding KeyTappedCommand}" CommandParameter="C" VerticalOptions="Fill" HorizontalOptions="Fill" />
+            <Button Grid.Row="2" Grid.Column="9" Grid.ColumnSpan="2" Text="V" Style="{StaticResource KeyboardKey}"
+                    Command="{Binding KeyTappedCommand}" CommandParameter="V" VerticalOptions="Fill" HorizontalOptions="Fill" />
+            <Button Grid.Row="2" Grid.Column="11" Grid.ColumnSpan="2" Text="B" Style="{StaticResource KeyboardKey}"
+                    Command="{Binding KeyTappedCommand}" CommandParameter="B" VerticalOptions="Fill" HorizontalOptions="Fill" />
+            <Button Grid.Row="2" Grid.Column="13" Grid.ColumnSpan="2" Text="N" Style="{StaticResource KeyboardKey}"
+                    Command="{Binding KeyTappedCommand}" CommandParameter="N" VerticalOptions="Fill" HorizontalOptions="Fill" />
+            <Button Grid.Row="2" Grid.Column="15" Grid.ColumnSpan="2" Text="M" Style="{StaticResource KeyboardKey}"
+                    Command="{Binding KeyTappedCommand}" CommandParameter="M" VerticalOptions="Fill" HorizontalOptions="Fill" />
+            <Button Grid.Row="2" Grid.Column="17" Grid.ColumnSpan="3" Text="CLEAR" Style="{StaticResource KeyboardActionKey}"
+                    Command="{Binding KeyTappedCommand}" CommandParameter="CLEAR" VerticalOptions="Fill" HorizontalOptions="Fill"
+                    AutomationProperties.Name="Clear search text" />
+
+            <!-- Row 4: space -->
+            <Button Grid.Row="3" Grid.Column="3" Grid.ColumnSpan="14" Text="SPACE" Style="{StaticResource KeyboardActionKey}"
+                    Command="{Binding KeyTappedCommand}" CommandParameter="SPACE" VerticalOptions="Fill" HorizontalOptions="Fill"
+                    AutomationProperties.Name="Space" />
+        </Grid>
+
+    </Grid>
+</ContentView>

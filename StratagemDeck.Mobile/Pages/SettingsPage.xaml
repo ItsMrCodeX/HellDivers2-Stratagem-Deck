@@ -50,6 +50,27 @@
                    FontSize="12"
                    HorizontalOptions="Center" />
 
+            <Border BackgroundColor="{StaticResource Surface}"
+                    Stroke="{StaticResource Hairline}"
+                    StrokeShape="RoundRectangle 12"
+                    Padding="14">
+                <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
+                    <VerticalStackLayout Spacing="4">
+                        <Label Text="Search Keyboard"
+                               FontSize="18"
+                               TextColor="{StaticResource OnCanvas}"
+                               FontAttributes="Bold" />
+                        <Label Text="Use the custom in-app keyboard when searching stratagems"
+                               FontSize="12"
+                               TextColor="{StaticResource Body}" />
+                    </VerticalStackLayout>
+                    <Switch Grid.Column="1"
+                            IsToggled="{Binding UseCustomKeyboard, Mode=TwoWay}"
+                            VerticalOptions="Center"
+                            AutomationProperties.Name="Use custom keyboard" />
+                </Grid>
+            </Border>
+
             <Button Text="Scan QR Code"
                     FontSize="15"
                     BackgroundColor="{StaticResource Surface}"

@@ -33,7 +33,6 @@ public class StratagemDataService
 
         _byCategory.Clear();
         Categories.Clear();
-        Directory.CreateDirectory(CacheDir);
 
         foreach (var (category, strats) in raw)
         {
@@ -51,12 +50,20 @@ public class StratagemDataService
             }
             _byCategory[category] = list;
         }
+    }
 
-        var all = _byCategory.Values.SelectMany(x => x).ToList();
-        await Parallel.ForEachAsync(
-            all,
-            new ParallelOptions { MaxDegreeOfParallelism = Environment.ProcessorCount },
-            async (strat, _) => strat.IconSource = await LoadIconAsync(strat));
+    public async Task LoadIconsAsync()
+    {
+        Directory.CreateDirectory(CacheDir);
+
+        foreach (var strats in _byCategory.Values)
+        {
+            foreach (var strat in strats)
+            {
+                var source = await Task.Run(() => LoadIconAsync(strat));
+                strat.IconSource = source;
+            }
+        }
     }
 
     private async Task<ImageSource?> LoadIconAsync(Stratagem strat)
@@ -81,20 +88,41 @@ public class StratagemDataService
         var cacheKey = $"{baseName}_{hash}.png";
         var cachePath = Path.Combine(CacheDir, cacheKey);
 
-        if (!File.Exists(cachePath))
+        if (!IsCacheFileValid(cachePath))
         {
             using var svgStream = new MemoryStream(svgBytes);
             var pngBytes = DecodeSvgToPng(svgStream);
-            if (pngBytes != null)
+            if (pngBytes == null)
+                return null;
+
+            try
             {
-                try { await File.WriteAllBytesAsync(cachePath, pngBytes); }
-                catch { return null; }
+                var tempPath = cachePath + ".tmp";
+                await File.WriteAllBytesAsync(tempPath, pngBytes);
+                File.Move(tempPath, cachePath, overwrite: true);
+            }
+            catch
+            {
+                return null;
             }
         }
 
-        return File.Exists(cachePath)
+        return IsCacheFileValid(cachePath)
             ? ImageSource.FromFile(cachePath)
             : null;
+    }
+
+    private static bool IsCacheFileValid(string path)
+    {
+        try
+        {
+            var info = new FileInfo(path);
+            return info.Exists && info.Length > 0;
+        }
+        catch
+        {
+            return false;
+        }
     }
 
     private static byte[]? DecodeSvgToPng(Stream svgStream)
@@ -128,6 +156,11 @@ public class StratagemDataService
         {
             return null;
         }
+    }
+
+    public List<Stratagem> GetAll()
+    {
+        return _byCategory.Values.SelectMany(x => x).ToList();
     }
 
     public List<Stratagem> GetByCategory(string category)

@@ -11,12 +11,14 @@ public class SettingsViewModel : INotifyPropertyChanged
 {
     private readonly SessionService _session;
     private readonly UdpDiscoveryService _discovery;
+    private readonly PreferencesService _prefs;
 
     private string _status = string.Empty;
     private string _pinEntry = string.Empty;
     private string _manualIp = string.Empty;
     private bool _isScanning;
     private bool _showManualEntry;
+    private bool _useCustomKeyboard;
 
     public event PropertyChangedEventHandler? PropertyChanged;
 
@@ -58,14 +60,28 @@ public class SettingsViewModel : INotifyPropertyChanged
         set { _showManualEntry = value; OnPropertyChanged(); }
     }
 
+    public bool UseCustomKeyboard
+    {
+        get => _useCustomKeyboard;
+        set
+        {
+            if (_useCustomKeyboard == value) return;
+            _useCustomKeyboard = value;
+            OnPropertyChanged();
+            _prefs.SaveUseCustomKeyboard(value);
+        }
+    }
+
     public bool IsConnected => _session.IsConnected;
     public string ConnectedServer => _session.IsConnected ? _session.ServerIp : "Not connected";
     public string CurrentPin => _session.Pin;
 
-    public SettingsViewModel(SessionService session, UdpDiscoveryService discovery)
+    public SettingsViewModel(SessionService session, UdpDiscoveryService discovery, PreferencesService prefs)
     {
         _session = session;
         _discovery = discovery;
+        _prefs = prefs;
+        _useCustomKeyboard = prefs.GetUseCustomKeyboard();
 
         _discovery.OnServerDiscovered += OnServerDiscovered;
         _discovery.OnLog += msg => MainThread.BeginInvokeOnMainThread(() =>

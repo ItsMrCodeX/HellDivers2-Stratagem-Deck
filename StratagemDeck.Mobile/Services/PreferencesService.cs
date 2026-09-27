@@ -6,6 +6,7 @@ namespace StratagemDeck.Mobile.Services;
 public class PreferencesService
 {
     private const string LoadoutKey = "saved_loadout";
+    private const string UseCustomKeyboardKey = "use_custom_keyboard";
 
     private readonly object _lock = new();
     private List<LoadoutSlot>? _pendingSlots;
@@ -121,6 +122,16 @@ public class PreferencesService
     public void SavePairedPin(string pin)
     {
         Preferences.Default.Set("paired_pin", pin);
+    }
+
+    public bool GetUseCustomKeyboard()
+    {
+        return Preferences.Default.Get(UseCustomKeyboardKey, true);
+    }
+
+    public void SaveUseCustomKeyboard(bool value)
+    {
+        Preferences.Default.Set(UseCustomKeyboardKey, value);
     }
 
     public string? GetLastServerIp()
