@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using System.Runtime.InteropServices;
 
 namespace StratagemDeck.Server.Native;
@@ -7,6 +8,13 @@ public static class KeyInjector
     private const uint KEYEVENTF_KEYUP = 0x0002;
 
     private static readonly int InputSize = IntPtr.Size == 8 ? Marshal.SizeOf<INPUT64>() : Marshal.SizeOf<INPUT32>();
+
+    private static readonly ConcurrentDictionary<string, byte> HeldKeys = new();
+    private static long _lastActivityTicks = DateTime.UtcNow.Ticks;
+
+    public static bool HasHeldKeys => !HeldKeys.IsEmpty;
+
+    public static DateTime LastActivity => new(Volatile.Read(ref _lastActivityTicks), DateTimeKind.Utc);
 
     private static readonly Dictionary<string, ushort> VkMap = new()
     {
@@ -66,6 +74,7 @@ public static class KeyInjector
     {
         if (keys.Count == 0) return;
 
+        TouchActivity();
         SendSingle("ctrl", false);
         await Task.Delay(delayMs);
 
@@ -80,6 +89,49 @@ public static class KeyInjector
         SendSingle("ctrl", true);
         await Task.Delay(50);
     }
+
+    /// <summary>Taps a key once (down + up).</summary>
+    public static async Task ExecuteKey(string key, int delayMs = 35)
+    {
+        if (!VkMap.ContainsKey(key)) return;
+
+        TouchActivity();
+        SendSingle(key, false);
+        await Task.Delay(delayMs);
+        SendSingle(key, true);
+        await Task.Delay(delayMs);
+    }
+
+    /// <summary>Presses or releases a key without tapping it (e.g. holding Ctrl).</summary>
+    public static void SetKeyHeld(string key, bool down)
+    {
+        if (!VkMap.ContainsKey(key)) return;
+
+        TouchActivity();
+
+        if (down)
+        {
+            SendSingle(key, false);
+            HeldKeys[key] = 0;
+        }
+        else
+        {
+            SendSingle(key, true);
+            HeldKeys.TryRemove(key, out _);
+        }
+    }
+
+    public static void ReleaseHeldKeys()
+    {
+        foreach (var key in HeldKeys.Keys)
+        {
+            SendSingle(key, true);
+            HeldKeys.TryRemove(key, out _);
+        }
+    }
+
+    private static void TouchActivity()
+        => Volatile.Write(ref _lastActivityTicks, DateTime.UtcNow.Ticks);
 
     private static void SendSingle(string key, bool keyUp)
     {

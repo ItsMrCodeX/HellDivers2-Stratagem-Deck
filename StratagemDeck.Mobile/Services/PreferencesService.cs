@@ -7,6 +7,7 @@ public class PreferencesService
 {
     private const string LoadoutKey = "saved_loadout";
     private const string UseCustomKeyboardKey = "use_custom_keyboard";
+    private const string CtrlInputsKey = "ctrl_inputs";
 
     private readonly object _lock = new();
     private List<LoadoutSlot>? _pendingSlots;
@@ -132,6 +133,16 @@ public class PreferencesService
     public void SaveUseCustomKeyboard(bool value)
     {
         Preferences.Default.Set(UseCustomKeyboardKey, value);
+    }
+
+    public bool GetCtrlInputs()
+    {
+        return Preferences.Default.Get(CtrlInputsKey, true);
+    }
+
+    public void SaveCtrlInputs(bool value)
+    {
+        Preferences.Default.Set(CtrlInputsKey, value);
     }
 
     public string? GetLastServerIp()

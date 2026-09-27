@@ -3,6 +3,7 @@ using System.Net;
 using System.Net.Sockets;
 using System.Text;
 using System.Text.Json;
+using System.Threading.Channels;
 using StratagemDeck.Server.Models;
 using StratagemDeck.Server.Native;
 
@@ -13,6 +14,12 @@ public class CommandListener : IDisposable
     private readonly UdpClient _udp;
     private readonly PinManager _pinManager;
     private readonly CancellationTokenSource _cts = new();
+    private readonly Channel<(string Key, string Action)> _keyQueue =
+        Channel.CreateUnbounded<(string Key, string Action)>(new UnboundedChannelOptions
+        {
+            SingleReader = true,
+            SingleWriter = true
+        });
     private bool _receiving;
 
     public event Action<LogCategory, string>? OnStatusChanged;
@@ -26,6 +33,8 @@ public class CommandListener : IDisposable
     public void Start()
     {
         _ = ListenLoop(_cts.Token);
+        _ = ProcessKeyLoop(_cts.Token);
+        _ = WatchdogLoop(_cts.Token);
     }
 
     public void Stop()
@@ -66,6 +75,9 @@ public class CommandListener : IDisposable
                         break;
                     case "stratagem":
                         await HandleStratagem(result.RemoteEndPoint, cmd);
+                        break;
+                    case "key":
+                        HandleKey(result.RemoteEndPoint, cmd);
                         break;
                     default:
                         OnStatusChanged?.Invoke(LogCategory.Error, $"Unknown message type '{cmd.Type}' from {result.RemoteEndPoint.Address}");
@@ -111,6 +123,75 @@ public class CommandListener : IDisposable
         await _udp.SendAsync(data, sender);
 
         OnStatusChanged?.Invoke(LogCategory.Network, $"Pong sent to {sender.Address}");
+    }
+
+    private void HandleKey(IPEndPoint sender, StratagemCommand cmd)
+    {
+        if (!_pinManager.Validate(cmd.Pin))
+        {
+            OnStatusChanged?.Invoke(LogCategory.Error, $"Invalid key PIN from {sender.Address}");
+            return;
+        }
+
+        if (string.IsNullOrEmpty(cmd.Key))
+            return;
+
+        var action = string.IsNullOrEmpty(cmd.Action) ? "tap" : cmd.Action;
+
+        if (!_keyQueue.Writer.TryWrite((cmd.Key, action)))
+            OnStatusChanged?.Invoke(LogCategory.Error, $"Input queue full - dropping {cmd.Key}");
+    }
+
+    private async Task ProcessKeyLoop(CancellationToken ct)
+    {
+        try
+        {
+            await foreach (var (key, action) in _keyQueue.Reader.ReadAllAsync(ct))
+            {
+                try
+                {
+                    switch (action)
+                    {
+                        case "down":
+                            OnStatusChanged?.Invoke(LogCategory.Stratagem, $"Hold: {key}");
+                            KeyInjector.SetKeyHeld(key, true);
+                            break;
+                        case "up":
+                            OnStatusChanged?.Invoke(LogCategory.Stratagem, $"Release: {key}");
+                            KeyInjector.SetKeyHeld(key, false);
+                            break;
+                        default:
+                            OnStatusChanged?.Invoke(LogCategory.Stratagem, $"Input: {key}");
+                            await KeyInjector.ExecuteKey(key);
+                            break;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    OnStatusChanged?.Invoke(LogCategory.Error, $"Input failed: {ex.Message}");
+                }
+            }
+        }
+        catch (OperationCanceledException) { }
+    }
+
+    private async Task WatchdogLoop(CancellationToken ct)
+    {
+        try
+        {
+            while (!ct.IsCancellationRequested)
+            {
+                await Task.Delay(TimeSpan.FromSeconds(10), ct);
+
+                if (KeyInjector.HasHeldKeys
+                    && DateTime.UtcNow - KeyInjector.LastActivity > TimeSpan.FromSeconds(60))
+                {
+                    KeyInjector.ReleaseHeldKeys();
+                    OnStatusChanged?.Invoke(LogCategory.Info, "Released held keys (idle)");
+                }
+            }
+        }
+        catch (OperationCanceledException) { }
     }
 
     private async Task HandleStratagem(IPEndPoint sender, StratagemCommand cmd)

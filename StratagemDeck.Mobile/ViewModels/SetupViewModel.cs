@@ -178,16 +178,28 @@ public class SetupViewModel : INotifyPropertyChanged
 
     private void OnTapStratagem(Stratagem stratagem)
     {
-        if (SelectedSlot == null)
-        {
-            Status = "Pick a slot first";
-            return;
-        }
-
         if (IsMissionSlotSelected)
+        {
             AddToMission(stratagem);
+        }
         else
+        {
+            if (SelectedSlot == null)
+            {
+                var firstEmpty = Slots.FirstOrDefault(
+                    s => s.SlotIndex is >= 0 and <= 3 && s.SelectedStratagem == null);
+
+                if (firstEmpty == null)
+                {
+                    Status = "All slots are full - pick a slot to replace";
+                    return;
+                }
+
+                SelectedSlot = firstEmpty;
+            }
+
             AssignToSlot(stratagem);
+        }
 
         if (IsSearchOpen)
             OnCloseSearch();
@@ -288,9 +300,13 @@ public class SetupViewModel : INotifyPropertyChanged
         _session.SaveLoadout();
         Status = $"Assigned {stratagem.DisplayName} to Slot {currentIdx + 1}";
 
-        // Auto-advance to next empty slot
+        // Auto-advance to the next empty slot (forward, then wrapping around)
         var next = Slots
-            .Where(s => s.SlotIndex >= 0 && s.SlotIndex <= 3 && s.SlotIndex > currentIdx && s.SelectedStratagem == null)
+            .Where(s => s.SlotIndex is >= 0 and <= 3 && s.SlotIndex > currentIdx && s.SelectedStratagem == null)
+            .OrderBy(s => s.SlotIndex)
+            .FirstOrDefault()
+            ?? Slots
+            .Where(s => s.SlotIndex is >= 0 and <= 3 && s.SlotIndex < currentIdx && s.SelectedStratagem == null)
             .OrderBy(s => s.SlotIndex)
             .FirstOrDefault();
 

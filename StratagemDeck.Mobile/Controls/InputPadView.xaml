@@ -1,0 +1,139 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentView xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:controls="clr-namespace:StratagemDeck.Mobile.Controls"
+             xmlns:conv="clr-namespace:StratagemDeck.Mobile.Converters"
+             x:Class="StratagemDeck.Mobile.Controls.InputPadView"
+             x:Name="Root"
+             x:DataType="controls:InputPadView"
+             BackgroundColor="{StaticResource Canvas}">
+
+    <ContentView.Resources>
+        <ResourceDictionary>
+            <conv:BoolToColorConverter x:Key="BoolToColor" />
+
+            <Style x:Key="PadKey" TargetType="Button">
+                <Setter Property="BackgroundColor" Value="{StaticResource SurfaceSoft}" />
+                <Setter Property="TextColor" Value="{StaticResource OnCanvas}" />
+                <Setter Property="FontFamily" Value="NunitoSemiBold" />
+                <Setter Property="FontSize" Value="30" />
+                <Setter Property="CornerRadius" Value="16" />
+                <Setter Property="Padding" Value="0" />
+                <Setter Property="MinimumHeightRequest" Value="0" />
+                <Setter Property="MinimumWidthRequest" Value="0" />
+            </Style>
+
+            <Style x:Key="PadAction" TargetType="Button" BasedOn="{StaticResource PadKey}">
+                <Setter Property="FontSize" Value="16" />
+                <Setter Property="CornerRadius" Value="12" />
+            </Style>
+        </ResourceDictionary>
+    </ContentView.Resources>
+
+    <Grid x:Name="RootGrid"
+          RowDefinitions="Auto,*,Auto"
+          Padding="10"
+          RowSpacing="6"
+          BackgroundColor="{StaticResource Canvas}">
+        <Grid.GestureRecognizers>
+            <TapGestureRecognizer Command="{Binding AbsorbTapCommand}" />
+            <SwipeGestureRecognizer Direction="Down" Command="{Binding CloseCommand}" Threshold="40" />
+        </Grid.GestureRecognizers>
+
+        <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="10">
+            <Border BackgroundColor="{StaticResource SurfaceSoft}"
+                    Stroke="{StaticResource Hairline}"
+                    StrokeThickness="1"
+                    StrokeShape="RoundRectangle 999"
+                    Padding="16,9"
+                    VerticalOptions="Center"
+                    AutomationProperties.Name="Toggle Ctrl mode">
+                <Border.Triggers>
+                    <DataTrigger TargetType="Border" Binding="{Binding CtrlEnabled}" Value="True">
+                        <Setter Property="BackgroundColor" Value="{StaticResource AccentActive}" />
+                        <Setter Property="Stroke" Value="{StaticResource AccentActive}" />
+                    </DataTrigger>
+                </Border.Triggers>
+                <Border.GestureRecognizers>
+                    <TapGestureRecognizer Command="{Binding ToggleCtrlCommand}" />
+                </Border.GestureRecognizers>
+                <Label Text="{Binding CtrlStateLabel}"
+                       FontSize="14"
+                       FontAttributes="Bold"
+                       TextColor="{StaticResource OnCanvas}"
+                       VerticalOptions="Center">
+                    <Label.Triggers>
+                        <DataTrigger TargetType="Label" Binding="{Binding CtrlEnabled}" Value="True">
+                            <Setter Property="TextColor" Value="{StaticResource Canvas}" />
+                        </DataTrigger>
+                    </Label.Triggers>
+                </Label>
+            </Border>
+
+            <HorizontalStackLayout Grid.Column="1"
+                                   Spacing="6"
+                                   HorizontalOptions="Center"
+                                   VerticalOptions="Center">
+                <Border BackgroundColor="{Binding IsConnected, Converter={StaticResource BoolToColor}}"
+                        WidthRequest="10"
+                        HeightRequest="10"
+                        StrokeShape="RoundRectangle 5"
+                        Stroke="Transparent"
+                        VerticalOptions="Center" />
+                <Label Text="{Binding LastInputGlyph}"
+                       FontSize="16"
+                       TextColor="{StaticResource AccentActive}"
+                       VerticalOptions="Center" />
+                <Label Text="{Binding InputStatus}"
+                       FontSize="13"
+                       TextColor="{StaticResource Body}"
+                       VerticalOptions="Center" />
+            </HorizontalStackLayout>
+
+            <Button Grid.Column="2"
+                    Text="✕"
+                    Style="{StaticResource PadAction}"
+                    WidthRequest="52"
+                    HeightRequest="40"
+                    VerticalOptions="Center"
+                    Command="{Binding CloseCommand}"
+                    AutomationProperties.Name="Close input pad" />
+        </Grid>
+
+        <!-- Keyboard arrow cluster: up on top, left/down/right below -->
+        <Grid Grid.Row="1" x:Name="PadArea" HorizontalOptions="Fill" VerticalOptions="Fill">
+            <Grid x:Name="ArrowCluster"
+                  HorizontalOptions="Center"
+                  VerticalOptions="Center"
+                  RowDefinitions="Auto,Auto"
+                  ColumnDefinitions="Auto,Auto,Auto"
+                  RowSpacing="8"
+                  ColumnSpacing="8">
+
+                <Button Grid.Row="0" Grid.Column="1" Text="▲" Style="{StaticResource PadKey}"
+                        Command="{Binding SendInputCommand}" CommandParameter="up"
+                        IsEnabled="{Binding IsConnected}"
+                        AutomationProperties.Name="Arrow up" />
+                <Button Grid.Row="1" Grid.Column="0" Text="◀" Style="{StaticResource PadKey}"
+                        Command="{Binding SendInputCommand}" CommandParameter="left"
+                        IsEnabled="{Binding IsConnected}"
+                        AutomationProperties.Name="Arrow left" />
+                <Button Grid.Row="1" Grid.Column="1" Text="▼" Style="{StaticResource PadKey}"
+                        Command="{Binding SendInputCommand}" CommandParameter="down"
+                        IsEnabled="{Binding IsConnected}"
+                        AutomationProperties.Name="Arrow down" />
+                <Button Grid.Row="1" Grid.Column="2" Text="▶" Style="{StaticResource PadKey}"
+                        Command="{Binding SendInputCommand}" CommandParameter="right"
+                        IsEnabled="{Binding IsConnected}"
+                        AutomationProperties.Name="Arrow right" />
+            </Grid>
+        </Grid>
+
+        <Label Grid.Row="2"
+               Text="Swipe down or tap ✕ to close"
+               FontSize="12"
+               TextColor="{StaticResource Mute}"
+               HorizontalOptions="Center" />
+
+    </Grid>
+</ContentView>

@@ -6,19 +6,21 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 
-- **Custom search keyboard** for the Setup page: full-screen overlay with results on top (1/4) and an in-app QWERTY keyboard at the bottom (3/4)
-- **A-Z sidebar filter** in the custom keyboard: filters stratagems by starting letter, combined with live typing
+- **Custom search keyboard** for the Setup page: full-screen overlay with results on top (1/4) and an in-app QWERTY keyboard at the bottom (3/4), including an A-Z sidebar filter that filters by the first letter of the displayed name combined with live typing
 - **Search Keyboard setting** in Settings (`use_custom_keyboard`, custom by default) to switch between the custom keyboard and the system keyboard
-- `StratagemDataService.GetAll()` / `SessionService.GetAll()` for full-list searches
+- **Input pad** as a `Pad` tab in the bottom bar: swipe up anywhere on the Game screen (at least half the screen height) or tap the tab to open a live D-pad that sends single arrow inputs to the server (`type: "key"`, serialized queue); swipe down, ✕ or Android back returns to Game; a right-aligned hint in the Game top status row announces the swipe
+- **Ctrl hold toggle** in the input pad: when on, the server holds Ctrl down while the pad is open (each arrow tap sends just the arrow) and releases it when toggled off, when leaving the pad, when the app sleeps, or after 60s of inactivity; when off, arrows are sent raw so Ctrl can be held on the PC keyboard; the choice is persisted (`ctrl_inputs` preference)
 
 ### Changed
 
-- **Icon loading moved to Setup start**: categories are now loaded one by one (sequentially) instead of decoding every icon at app startup; decoded PNGs stay cached in `AppDataDirectory/icon_cache` and are reused across launches (cache is only removed when the app is uninstalled or its data is cleared)
+- Assigning a stratagem now falls back to the first empty slot when no slot is selected and the auto-advance wraps to the first empty slot when the following slots are full (applies to both the setup grid and the custom keyboard)
+- **Icon loading runs off the main thread**: SVGs are decoded in parallel on up to 4 worker threads and all icons are bound in a single UI pass, removing the frame drops caused by one main-thread update per icon; the platform image loader (Glide on Android) is warmed up once with a hidden image so its first-use initialization no longer stalls the first search frame; loading starts with Setup instead of at app startup, and decoded PNGs stay cached in `AppDataDirectory/icon_cache` and are reused across launches (cache is only removed when the app is uninstalled or its data is cleared)
 - `Stratagem.IconSource` now raises `PropertyChanged`, so icons that finish loading after binding appear in grids, slots and the custom keyboard results
 
 ### Fixed
 
 - Icon cache writes are now atomic (temp file + move) and validated before reuse, so a partial/corrupt PNG is re-decoded instead of rendering a broken icon
+- Server TUI no longer cycles the server IP when arrows are injected with `SendInput`: arrow navigation is suppressed for a short window (`TerminalLayout.SuppressInput`)
 
 ## [Released 1.2.2] 
 

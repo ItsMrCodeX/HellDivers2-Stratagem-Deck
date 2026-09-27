@@ -1,4 +1,5 @@
-﻿using StratagemDeck.Server.Services;
+﻿using StratagemDeck.Server.Native;
+using StratagemDeck.Server.Services;
 using QRCoder;
 
 const int cmdPort = 12345;
@@ -29,6 +30,10 @@ listener.OnStatusChanged += (category, msg) =>
         tui.IgnoreInput = true;
     else if (category == LogCategory.Success && (msg == "Ready" || msg.StartsWith("Done")))
         tui.IgnoreInput = false;
+
+    // Live inputs are injected too: suppress arrow navigation for a short window
+    if (msg.StartsWith("Input:"))
+        tui.SuppressInput();
 };
 
 var cycleQr = () =>
@@ -53,9 +58,12 @@ tui.EnqueueLog(new LogEntry($"Listening on UDP {cmdPort} ", LogCategory.Info, Da
 
 listener.Start();
 
+Console.CancelKeyPress += (_, _) => KeyInjector.ReleaseHeldKeys();
+
 tui.Run();
 
 listener.Stop();
+KeyInjector.ReleaseHeldKeys();
 
 static string GenerateQrCode(string ip, string pin)
 {

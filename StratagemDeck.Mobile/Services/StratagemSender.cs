@@ -17,15 +17,29 @@ public class StratagemSender
 
     public async Task SendAsync(string ip, string pin, Stratagem stratagem)
     {
-        var msg = new
+        await SendJsonAsync(ip, new
         {
             type = "stratagem",
             pin,
             name = stratagem.Name,
             keys = stratagem.Keys
-        };
+        });
+    }
 
-        var json = JsonSerializer.Serialize(msg);
+    public async Task SendKeyAsync(string ip, string pin, string key, string action = "tap")
+    {
+        await SendJsonAsync(ip, new
+        {
+            type = "key",
+            pin,
+            key,
+            action
+        });
+    }
+
+    private async Task SendJsonAsync(string ip, object message)
+    {
+        var json = JsonSerializer.Serialize(message);
         var data = Encoding.UTF8.GetBytes(json);
 
         using var udp = new UdpClient();

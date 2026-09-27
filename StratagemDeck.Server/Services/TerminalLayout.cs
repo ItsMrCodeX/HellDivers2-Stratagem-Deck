@@ -36,6 +36,7 @@ public class TerminalLayout : IDisposable
     private string _pin = "";
     private string _qrCode = "";
     private bool _ignoreInput;
+    private long _suppressInputUntilTicks;
 
     public event Action? OnRegenerateRequested;
     public event Action<int>? OnIpCycleRequested;
@@ -49,6 +50,16 @@ public class TerminalLayout : IDisposable
     {
         set => _ignoreInput = value;
     }
+
+    /// <summary>
+    /// Ignores arrow key navigation for a short window, so keys injected with SendInput
+    /// (device input) are not mistaken for keyboard input in the console.
+    /// </summary>
+    public void SuppressInput(int milliseconds = 400)
+        => Interlocked.Exchange(ref _suppressInputUntilTicks, DateTime.UtcNow.AddMilliseconds(milliseconds).Ticks);
+
+    private bool IsInputSuppressed =>
+        DateTime.UtcNow.Ticks < Volatile.Read(ref _suppressInputUntilTicks);
 
     public string CurrentIp => _ips.Count > 0 ? _ips[_currentIpIndex] : "0.0.0.0";
     public bool HasMultipleIps => _ips.Count > 1;
@@ -151,6 +162,12 @@ public class TerminalLayout : IDisposable
 
     private void HandleKey(ConsoleKeyInfo key)
     {
+        var isArrow = key.Key is ConsoleKey.UpArrow or ConsoleKey.DownArrow
+            or ConsoleKey.LeftArrow or ConsoleKey.RightArrow;
+
+        if (isArrow && (_ignoreInput || IsInputSuppressed))
+            return;
+
         switch (key.Key)
         {
             case ConsoleKey.Q:
@@ -199,7 +216,6 @@ public class TerminalLayout : IDisposable
                 break;
 
             case ConsoleKey.LeftArrow:
-                if (_ignoreInput) break;
                 if (_ips.Count > 1)
                 {
                     _currentIpIndex = (_currentIpIndex - 1 + _ips.Count) % _ips.Count;
@@ -208,7 +224,6 @@ public class TerminalLayout : IDisposable
                 break;
 
             case ConsoleKey.RightArrow:
-                if (_ignoreInput) break;
                 if (_ips.Count > 1)
                 {
                     _currentIpIndex = (_currentIpIndex + 1) % _ips.Count;

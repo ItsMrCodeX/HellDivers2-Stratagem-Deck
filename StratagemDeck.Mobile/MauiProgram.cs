@@ -33,6 +33,7 @@ public static class MauiProgram
 
         builder.Services.AddTransient<SetupPage>();
         builder.Services.AddTransient<GamePage>();
+        builder.Services.AddTransient<PadPage>();
         builder.Services.AddTransient<SettingsPage>();
         builder.Services.AddTransient<QrScanPage>();
 

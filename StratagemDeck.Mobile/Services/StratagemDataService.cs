@@ -56,14 +56,27 @@ public class StratagemDataService
     {
         Directory.CreateDirectory(CacheDir);
 
-        foreach (var strats in _byCategory.Values)
-        {
-            foreach (var strat in strats)
+        var strats = _byCategory.Values.SelectMany(x => x).ToList();
+        if (strats.Count == 0) return;
+
+        var results = new (Stratagem Item, ImageSource? Icon)[strats.Count];
+        var parallelism = Math.Clamp(Environment.ProcessorCount, 2, 4);
+
+        await Parallel.ForEachAsync(
+            Enumerable.Range(0, strats.Count),
+            new ParallelOptions { MaxDegreeOfParallelism = parallelism },
+            async (index, _) =>
             {
-                var source = await Task.Run(() => LoadIconAsync(strat));
-                strat.IconSource = source;
-            }
-        }
+                var source = await LoadIconAsync(strats[index]);
+                results[index] = (strats[index], source);
+            });
+
+        // Single UI pass: assigning icons one by one on the main thread dropped frames
+        await MainThread.InvokeOnMainThreadAsync(() =>
+        {
+            foreach (var (item, icon) in results)
+                item.IconSource = icon;
+        });
     }
 
     private async Task<ImageSource?> LoadIconAsync(Stratagem strat)

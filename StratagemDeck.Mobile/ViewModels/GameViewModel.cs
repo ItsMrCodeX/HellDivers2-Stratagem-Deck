@@ -11,13 +11,20 @@ public class GameViewModel : INotifyPropertyChanged
 {
     private readonly SessionService _session;
     private readonly StratagemSender _sender;
+    private readonly PreferencesService _prefs;
     private bool _isSending;
     private string _status = string.Empty;
+    private bool _ctrlEnabled;
+    private string _inputStatus = string.Empty;
+    private string _lastInput = string.Empty;
+    private ImageSource? _warmupIcon;
 
     public event PropertyChangedEventHandler? PropertyChanged;
 
     public ICommand TapSlotCommand { get; }
     public ICommand SendMissionStratagemCommand { get; }
+    public ICommand ToggleCtrlCommand { get; }
+    public ICommand SendInputCommand { get; }
 
     public ObservableCollection<LoadoutSlot> Slots => _session.Slots;
 
@@ -52,16 +59,52 @@ public class GameViewModel : INotifyPropertyChanged
 
     public bool IsConnected => _session.IsConnected;
 
-    public GameViewModel(SessionService session, StratagemSender sender)
+    public bool CtrlEnabled
+    {
+        get => _ctrlEnabled;
+        private set
+        {
+            if (_ctrlEnabled == value) return;
+            _ctrlEnabled = value;
+            OnPropertyChanged();
+        }
+    }
+
+    public string InputStatus
+    {
+        get => _inputStatus;
+        set { _inputStatus = value; OnPropertyChanged(); }
+    }
+
+    public string LastInput
+    {
+        get => _lastInput;
+        private set { _lastInput = value; OnPropertyChanged(); }
+    }
+
+    public ImageSource? WarmupIcon
+    {
+        get => _warmupIcon;
+        private set { _warmupIcon = value; OnPropertyChanged(); }
+    }
+
+    public GameViewModel(SessionService session, StratagemSender sender, PreferencesService prefs)
     {
         _session = session;
         _sender = sender;
+        _prefs = prefs;
+        _ctrlEnabled = prefs.GetCtrlInputs();
 
         TapSlotCommand = new Command<string>(async (idx) => await OnTapSlot(idx));
         SendMissionStratagemCommand = new Command<Stratagem>(async (s) => await OnSendMission(s));
+        ToggleCtrlCommand = new Command(OnToggleCtrl);
+        SendInputCommand = new Command<string>(async (key) => await OnSendInput(key));
         _session.OnConnectedChanged += () =>
         {
             OnPropertyChanged(nameof(IsConnected));
+
+            if (!_session.IsConnected)
+                _ = SetCtrlHeldAsync(false);
         };
         _session.OnLoadoutChanged += () =>
         {
@@ -70,6 +113,10 @@ public class GameViewModel : INotifyPropertyChanged
         _session.OnIconsLoaded += () =>
         {
             NotifySlotsChanged();
+
+            // Warm up the platform image loader (Glide on Android) once so its
+            // one-time initialization does not stall the first search results.
+            WarmupIcon ??= _session.GetAll().FirstOrDefault(s => s.IconSource != null)?.IconSource;
         };
     }
 
@@ -128,6 +175,69 @@ public class GameViewModel : INotifyPropertyChanged
     public void UpdateConnectionStatus()
     {
         OnPropertyChanged(nameof(IsConnected));
+    }
+
+    public void RefreshPadState()
+    {
+        CtrlEnabled = _prefs.GetCtrlInputs();
+        InputStatus = _session.IsConnected ? "Ready" : "Not connected";
+
+        if (CtrlEnabled)
+            _ = SetCtrlHeldAsync(true);
+    }
+
+    public Task ReleaseHeldKeysAsync() => SetCtrlHeldAsync(false);
+
+    private void OnToggleCtrl()
+    {
+        CtrlEnabled = !CtrlEnabled;
+        _prefs.SaveCtrlInputs(CtrlEnabled);
+        InputStatus = CtrlEnabled ? "Ctrl held" : "Ctrl released";
+        _ = SetCtrlHeldAsync(CtrlEnabled);
+    }
+
+    private async Task SetCtrlHeldAsync(bool hold)
+    {
+        if (string.IsNullOrEmpty(_session.ServerIp)) return;
+
+        try
+        {
+            await _sender.SendKeyAsync(_session.ServerIp, _session.Pin, "ctrl", hold ? "down" : "up");
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Ctrl hold failed: {ex}");
+        }
+    }
+
+    private async Task OnSendInput(string? key)
+    {
+        if (string.IsNullOrWhiteSpace(key)) return;
+
+        if (!_session.IsConnected || string.IsNullOrEmpty(_session.ServerIp))
+        {
+            InputStatus = "Not connected";
+            return;
+        }
+
+        InputStatus = $"Sent {key}";
+        LastInput = key;
+
+        try { HapticFeedback.Default.Perform(HapticFeedbackType.Click); }
+        catch { }
+
+        try
+        {
+            if (CtrlEnabled)
+                await _sender.SendKeyAsync(_session.ServerIp, _session.Pin, "ctrl", "down");
+
+            await _sender.SendKeyAsync(_session.ServerIp, _session.Pin, key, "tap");
+        }
+        catch (Exception ex)
+        {
+            InputStatus = "Send failed";
+            System.Diagnostics.Debug.WriteLine($"Input send failed: {ex}");
+        }
     }
 
     protected void OnPropertyChanged([CallerMemberName] string? name = null)

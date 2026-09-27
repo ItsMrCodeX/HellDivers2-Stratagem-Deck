@@ -16,6 +16,10 @@
             ContentTemplate="{DataTemplate pages:GamePage}"
             Route="game" />
         <ShellContent
+            Title="Pad"
+            ContentTemplate="{DataTemplate pages:PadPage}"
+            Route="pad" />
+        <ShellContent
             Title="Setup"
             ContentTemplate="{DataTemplate pages:SetupPage}"
             Route="setup" />

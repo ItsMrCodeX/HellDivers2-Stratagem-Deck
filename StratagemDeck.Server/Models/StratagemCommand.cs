@@ -15,6 +15,12 @@ public class StratagemCommand
 
     [JsonPropertyName("keys")]
     public List<string> Keys { get; set; } = new();
+
+    [JsonPropertyName("key")]
+    public string Key { get; set; } = string.Empty;
+
+    [JsonPropertyName("action")]
+    public string Action { get; set; } = "tap";
 }
 
 public class DiscoveryMessage

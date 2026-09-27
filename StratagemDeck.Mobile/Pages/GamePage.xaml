@@ -18,12 +18,14 @@
 
     <Grid RowDefinitions="Auto,2*,*" Padding="4" RowSpacing="4" VerticalOptions="Fill">
 
-        <Grid Grid.Row="0" ColumnDefinitions="Auto,*" ColumnSpacing="6" Padding="2">
+        <Grid Grid.Row="0" ColumnDefinitions="Auto,*,Auto" ColumnSpacing="6" Padding="2">
             <Border BackgroundColor="{Binding IsConnected, Converter={StaticResource BoolToColor}}"
                      WidthRequest="10" HeightRequest="10" StrokeShape="RoundRectangle 5"
                      Stroke="Transparent" VerticalOptions="Center" />
             <Label Grid.Column="1" Text="{Binding Status}" TextColor="{StaticResource Body}" FontSize="10"
                    VerticalOptions="Center" HorizontalOptions="Start" />
+            <Label Grid.Column="2" Text="Swipe up to open directional pad" TextColor="{StaticResource Mute}" FontSize="10"
+                   VerticalOptions="Center" HorizontalOptions="End" />
         </Grid>
 
         <Grid Grid.Row="1" ColumnDefinitions="*,*,*,*" ColumnSpacing="6" VerticalOptions="Fill">
@@ -110,6 +112,15 @@
                 </ScrollView>
             </Grid>
         </Border>
+
+        <!-- Hidden 1x1 image: forces the platform image loader (Glide) to initialize early -->
+        <Image Source="{Binding WarmupIcon}"
+               WidthRequest="1"
+               HeightRequest="1"
+               Opacity="0"
+               InputTransparent="True"
+               HorizontalOptions="Start"
+               VerticalOptions="Start" />
 
     </Grid>
 </ContentPage>
