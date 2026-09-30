@@ -12,6 +12,7 @@ public class GameViewModel : INotifyPropertyChanged
     private readonly SessionService _session;
     private readonly StratagemSender _sender;
     private readonly PreferencesService _prefs;
+    private readonly HashSet<string> _heldPadKeys = new();
     private bool _isSending;
     private string _status = string.Empty;
     private bool _ctrlEnabled;
@@ -24,7 +25,8 @@ public class GameViewModel : INotifyPropertyChanged
     public ICommand TapSlotCommand { get; }
     public ICommand SendMissionStratagemCommand { get; }
     public ICommand ToggleCtrlCommand { get; }
-    public ICommand SendInputCommand { get; }
+    public ICommand KeyDownCommand { get; }
+    public ICommand KeyUpCommand { get; }
 
     public ObservableCollection<LoadoutSlot> Slots => _session.Slots;
 
@@ -98,13 +100,17 @@ public class GameViewModel : INotifyPropertyChanged
         TapSlotCommand = new Command<string>(async (idx) => await OnTapSlot(idx));
         SendMissionStratagemCommand = new Command<Stratagem>(async (s) => await OnSendMission(s));
         ToggleCtrlCommand = new Command(OnToggleCtrl);
-        SendInputCommand = new Command<string>(async (key) => await OnSendInput(key));
+        KeyDownCommand = new Command<string>(async (key) => await OnPadKeyDown(key));
+        KeyUpCommand = new Command<string>(async (key) => await OnPadKeyUp(key));
         _session.OnConnectedChanged += () =>
         {
             OnPropertyChanged(nameof(IsConnected));
 
             if (!_session.IsConnected)
+            {
+                _heldPadKeys.Clear();
                 _ = SetCtrlHeldAsync(false);
+            }
         };
         _session.OnLoadoutChanged += () =>
         {
@@ -186,7 +192,20 @@ public class GameViewModel : INotifyPropertyChanged
             _ = SetCtrlHeldAsync(true);
     }
 
-    public Task ReleaseHeldKeysAsync() => SetCtrlHeldAsync(false);
+    public async Task ReleaseHeldKeysAsync()
+    {
+        if (!string.IsNullOrEmpty(_session.ServerIp))
+        {
+            foreach (var key in _heldPadKeys.ToList())
+            {
+                try { await _sender.SendKeyAsync(_session.ServerIp, _session.Pin, key, "up"); }
+                catch (Exception ex) { System.Diagnostics.Debug.WriteLine($"Release failed: {ex}"); }
+            }
+        }
+
+        _heldPadKeys.Clear();
+        await SetCtrlHeldAsync(false);
+    }
 
     private void OnToggleCtrl()
     {
@@ -210,7 +229,7 @@ public class GameViewModel : INotifyPropertyChanged
         }
     }
 
-    private async Task OnSendInput(string? key)
+    private async Task OnPadKeyDown(string? key)
     {
         if (string.IsNullOrWhiteSpace(key)) return;
 
@@ -220,23 +239,50 @@ public class GameViewModel : INotifyPropertyChanged
             return;
         }
 
-        InputStatus = $"Sent {key}";
-        LastInput = key;
+        if (_heldPadKeys.Contains(key)) return;
 
         try { HapticFeedback.Default.Perform(HapticFeedbackType.Click); }
         catch { }
 
         try
         {
+            foreach (var held in _heldPadKeys.ToList())
+            {
+                await _sender.SendKeyAsync(_session.ServerIp, _session.Pin, held, "up");
+                _heldPadKeys.Remove(held);
+            }
+
             if (CtrlEnabled)
                 await _sender.SendKeyAsync(_session.ServerIp, _session.Pin, "ctrl", "down");
 
-            await _sender.SendKeyAsync(_session.ServerIp, _session.Pin, key, "tap");
+            await _sender.SendKeyAsync(_session.ServerIp, _session.Pin, key, "down");
+            _heldPadKeys.Add(key);
+
+            LastInput = key;
+            InputStatus = $"Hold {key}";
         }
         catch (Exception ex)
         {
             InputStatus = "Send failed";
-            System.Diagnostics.Debug.WriteLine($"Input send failed: {ex}");
+            System.Diagnostics.Debug.WriteLine($"Key down failed: {ex}");
+        }
+    }
+
+    private async Task OnPadKeyUp(string? key)
+    {
+        if (string.IsNullOrWhiteSpace(key)) return;
+        if (!_heldPadKeys.Remove(key)) return;
+        if (string.IsNullOrEmpty(_session.ServerIp)) return;
+
+        try
+        {
+            await _sender.SendKeyAsync(_session.ServerIp, _session.Pin, key, "up");
+            InputStatus = "Ready";
+        }
+        catch (Exception ex)
+        {
+            InputStatus = "Send failed";
+            System.Diagnostics.Debug.WriteLine($"Key up failed: {ex}");
         }
     }
 

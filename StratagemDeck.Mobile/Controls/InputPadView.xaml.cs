@@ -18,8 +18,11 @@ public partial class InputPadView : ContentView
         nameof(LastInput), typeof(string), typeof(InputPadView), string.Empty,
         propertyChanged: OnLastInputChanged);
 
-    public static readonly BindableProperty SendInputCommandProperty = BindableProperty.Create(
-        nameof(SendInputCommand), typeof(ICommand), typeof(InputPadView));
+    public static readonly BindableProperty KeyDownCommandProperty = BindableProperty.Create(
+        nameof(KeyDownCommand), typeof(ICommand), typeof(InputPadView));
+
+    public static readonly BindableProperty KeyUpCommandProperty = BindableProperty.Create(
+        nameof(KeyUpCommand), typeof(ICommand), typeof(InputPadView));
 
     public static readonly BindableProperty ToggleCtrlCommandProperty = BindableProperty.Create(
         nameof(ToggleCtrlCommand), typeof(ICommand), typeof(InputPadView));
@@ -66,6 +69,18 @@ public partial class InputPadView : ContentView
 
     public ICommand AbsorbTapCommand { get; } = new Command(() => { });
 
+    private void OnKeyPressed(object? sender, EventArgs e)
+    {
+        if (sender is Button { CommandParameter: string key })
+            KeyDownCommand?.Execute(key);
+    }
+
+    private void OnKeyReleased(object? sender, EventArgs e)
+    {
+        if (sender is Button { CommandParameter: string key })
+            KeyUpCommand?.Execute(key);
+    }
+
     public bool CtrlEnabled
     {
         get => (bool)GetValue(CtrlEnabledProperty);
@@ -99,10 +114,16 @@ public partial class InputPadView : ContentView
         _ => "·"
     };
 
-    public ICommand? SendInputCommand
+    public ICommand? KeyDownCommand
     {
-        get => (ICommand?)GetValue(SendInputCommandProperty);
-        set => SetValue(SendInputCommandProperty, value);
+        get => (ICommand?)GetValue(KeyDownCommandProperty);
+        set => SetValue(KeyDownCommandProperty, value);
+    }
+
+    public ICommand? KeyUpCommand
+    {
+        get => (ICommand?)GetValue(KeyUpCommandProperty);
+        set => SetValue(KeyUpCommandProperty, value);
     }
 
     public ICommand? ToggleCtrlCommand

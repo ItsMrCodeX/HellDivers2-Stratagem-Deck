@@ -36,6 +36,7 @@ public class TerminalLayout : IDisposable
     private string _pin = "";
     private string _qrCode = "";
     private bool _ignoreInput;
+    private int _injectedInputHeld;
     private long _suppressInputUntilTicks;
 
     public event Action? OnRegenerateRequested;
@@ -58,8 +59,18 @@ public class TerminalLayout : IDisposable
     public void SuppressInput(int milliseconds = 400)
         => Interlocked.Exchange(ref _suppressInputUntilTicks, DateTime.UtcNow.AddMilliseconds(milliseconds).Ticks);
 
+    /// <summary>
+    /// Blocks arrow navigation while a live pad key is physically held down and injected,
+    /// so the held key does not drive the TUI (e.g. cycling IPs).
+    /// </summary>
+    public void PauseInjectedInput() => Interlocked.Exchange(ref _injectedInputHeld, 1);
+
+    /// <summary>Re-enables arrow navigation once the held pad keys are released.</summary>
+    public void ResumeInjectedInput() => Interlocked.Exchange(ref _injectedInputHeld, 0);
+
     private bool IsInputSuppressed =>
-        DateTime.UtcNow.Ticks < Volatile.Read(ref _suppressInputUntilTicks);
+        Volatile.Read(ref _injectedInputHeld) == 1
+        || DateTime.UtcNow.Ticks < Volatile.Read(ref _suppressInputUntilTicks);
 
     public string CurrentIp => _ips.Count > 0 ? _ips[_currentIpIndex] : "0.0.0.0";
     public bool HasMultipleIps => _ips.Count > 1;

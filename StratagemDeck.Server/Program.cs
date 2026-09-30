@@ -31,9 +31,20 @@ listener.OnStatusChanged += (category, msg) =>
     else if (category == LogCategory.Success && (msg == "Ready" || msg.StartsWith("Done")))
         tui.IgnoreInput = false;
 
-    // Live inputs are injected too: suppress arrow navigation for a short window
-    if (msg.StartsWith("Input:"))
+    // Live inputs are injected too: keep arrow keys from driving TUI navigation.
+    if (msg.StartsWith("Hold:"))
+    {
+        tui.PauseInjectedInput();
+    }
+    else if (msg.StartsWith("Input:") || msg.StartsWith("Release:"))
+    {
+        tui.ResumeInjectedInput();
         tui.SuppressInput();
+    }
+    else if (msg == "Released held keys (idle)")
+    {
+        tui.ResumeInjectedInput();
+    }
 };
 
 var cycleQr = () =>

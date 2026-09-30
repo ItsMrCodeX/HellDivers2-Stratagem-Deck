@@ -14,7 +14,8 @@
                            IsConnected="{Binding IsConnected}"
                            InputStatus="{Binding InputStatus}"
                            LastInput="{Binding LastInput}"
-                           SendInputCommand="{Binding SendInputCommand}"
+                           KeyDownCommand="{Binding KeyDownCommand}"
+                           KeyUpCommand="{Binding KeyUpCommand}"
                            ToggleCtrlCommand="{Binding ToggleCtrlCommand}" />
 
 </ContentPage>
