@@ -102,7 +102,7 @@ HellDivers2-Stratagem-Deck/
 │   ├── ViewModels/
 │   ├── Services/                      # UDP, discovery, session, preferences, swipe watcher
 │   └── Resources/Raw/
-│       ├── stratagems.json            # 115 stratagems with keys and short names
+│       ├── stratagems.json            # 117 stratagems with keys and short names
 │       └── icons/                     # SVG icons
 ├── README.md
 └── .gitignore

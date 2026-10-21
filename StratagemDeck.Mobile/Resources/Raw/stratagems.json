@@ -131,6 +131,14 @@
     "40-K Meltagun": {
       "keys": "down left up left left down",
       "shortName": "Meltagun"
+    },
+    "AMW-20 Apex": {
+      "keys": "down left left up down left",
+      "shortName": "Apex"
+    },
+    "LAS-44 Nova": {
+      "keys": "down left right down down",
+      "shortName": "Nova"
     }
   },
   "Offensive: Orbital": {
