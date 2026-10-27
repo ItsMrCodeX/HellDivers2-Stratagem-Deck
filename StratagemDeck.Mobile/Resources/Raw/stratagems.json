@@ -189,6 +189,10 @@
     "Orbital Railcannon Strike": {
       "keys": "right up down down right",
       "shortName": "Orbital Railcannon Strike"
+    },
+    "Orbital Confetti": {
+      "keys": "right down down up up down down up up",
+      "shortName": "Orbital Confetti"
     }
   },
   "Offensive: Eagle": {
@@ -223,6 +227,10 @@
     "Eagle Gas Airstrike": {
       "keys": "up right left right",
       "shortName": "Eagle Gas Airstrike"
+    },
+    "Eagle Fly By": {
+      "keys": "up down down up up down down up up",
+      "shortName": "Eagle Fly By"
     }
   },
   "Defensive": {
